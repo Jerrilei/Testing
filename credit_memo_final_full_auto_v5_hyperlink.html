@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Credit Memorandum — Final Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--muted:#6b7280;--accent:#0b66c3;--danger:#ef4444;--missing-ring:#facc15}
+body{font-family:Inter,Arial,sans-serif;background:var(--bg);margin:0;color:#0f172a}
+.container{max-width:1200px;margin:0 auto;padding:20px 24px 40px}
+.card{background:var(--card);border-radius:12px;padding:18px 20px;margin-bottom:20px;box-shadow:0 4px 18px rgba(15,23,42,0.08);border:1px solid rgba(15,23,42,0.03)}
+.section-title{font-size:18px;font-weight:700;margin:4px 0 12px}
+label{font-size:13px;color:var(--muted)}
+input,textarea,select{width:100%;padding:8px 10px;margin-top:4px;border-radius:8px;border:1px solid #d1d5db;font-size:14px;background:#fff;box-sizing:border-box}
+textarea{min-height:80px;resize:vertical}
+input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0 0 0 1px var(--missing-ring)}
+.table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+.table th,.table td{padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+.table th{font-weight:600;text-align:left;background:#f9fafb}
+.btn{background:var(--accent);color:#fff;padding:8px 18px;border-radius:8px;border:0;cursor:pointer;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn-outline{background:transparent;border:2px solid var(--accent);color:var(--accent);padding:7px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+.btn:disabled,.btn-outline:disabled{opacity:.5;cursor:not-allowed}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.header-actions{display:flex;align-items:flex-end;gap:10px}
+.buyer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.field-col{display:flex;flex-direction:column;gap:10px}
+.field{display:flex;flex-direction:column}
+.note{font-size:12px;color:var(--muted)}
+.small{font-size:12px}
+
+/* Obligor Ratings 3-column grid */
+.obligor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+
+/* Floating Chatbot */
+#chatFloatBtn{position:fixed;right:24px;bottom:24px;background:#0b66c3;color:#fff;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.25);z-index:999}
+#chatPanel{position:fixed;right:24px;bottom:90px;width:320px;background:#fff;border-radius:12px;box-shadow:0 8px 26px rgba(0,0,0,0.2);padding:12px;display:none;z-index:998}
+#chatPanel textarea{min-height:70px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="card">
+  <div class="header-row">
+    <div>
+      <h1 style="margin:0;font-size:22px">CREDIT MEMORANDUM</h1>
+      <div class="note">Template aligned to PDF memo. Required fields are ringed in amber until completed.</div>
+    </div>
+    <div class="header-actions">
+      <div style="text-align:right">
+        <div class="note">Prepared date</div>
+        <div id="prepDate">2025-01-01</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:14px;align-items:flex-end">
+    <div style="flex:1">
+      <label>Buyer name</label>
+      <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
+    </div>
+    <button class="btn" id="refreshBuyer">Fetch Data</button>
+    <button class="btn-outline" id="prefillWalmartBtn">Demo (PDD)</button>
+  </div>
+
+  <div style="margin-top:16px" class="section-title">Executive Summary</div>
+  <textarea id="execSummary" data-required="1"></textarea>
+
+  <div style="margin-top:12px" class="section-title">Key Highlights</div>
+  <textarea id="highlights"></textarea>
+</div>
+
+<!-- BUYER INFORMATION -->
+<div class="card">
+  <div class="section-title">Buyer Information</div>
+  <div class="buyer-grid">
+    <!-- Column 1: Basic info -->
+    <div class="field-col">
+      <div class="field">
+        <label>Borrower / Obligor *</label>
+        <input id="companyName" data-required="1" />
+      </div>
+      <div class="field">
+        <label>Group / Parent Legal Name</label>
+        <input id="groupParentName" />
+      </div>
+      <div class="field">
+        <label>Obligor Legal Name</label>
+        <input id="obligorLegalName" />
+      </div>
+      <div class="field">
+        <label>Country</label>
+        <input id="country" />
+      </div>
+      <div class="field">
+        <label>Country of Incorporation</label>
+        <input id="countryOfIncorp" />
+      </div>
+    </div>
+
+    <!-- Column 2: Core business -->
+    <div class="field-col">
+      <div class="field">
+        <label>Business description</label>
+        <textarea id="business"></textarea>
+      </div>
+      <div class="field">
+        <label>Business activities</label>
+        <textarea id="coreBusinessActivities"></textarea>
+      </div>
+      <div class="field">
+        <label>Key Customers</label>
+        <textarea id="coreBusinessCustomers"></textarea>
+      </div>
+      <div class="field">
+        <label>Website</label>
+        <input id="coreBusinessWebsite" />
+      </div>
+    </div>
+
+    <!-- Column 3: Ratings / market cap -->
+    <div class="field-col">
+      <div class="field">
+        <label>Market Cap</label>
+        <input id="marketCap" />
+      </div>
+      <div class="field">
+        <label>External credit rating</label>
+        <input id="externalRating" />
+      </div>
+      <div class="field">
+        <label>Internal Rating (Current)</label>
+        <input id="internalRatingCurrent" />
+      </div>
+      <div class="field">
+        <label>Internal Rating (Proposed)</label>
+        <input id="internalRatingProposed" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY FINANCIALS -->
+<div class="card">
+  <div class="section-title">Financial Highlights (Summary)</div>
+  <table class="table" id="summaryFinTbl">
+    <thead>
+      <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>23 vs 22</th><th>24 vs 23</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- CREDIT LIMITS -->
+<div class="card">
+  <div class="section-title">Credit Limits</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>(US$m)</th><th>Existing</th><th>Current utilisation</th><th>Proposed</th>
+        <th>Insurer / GMV & insurance</th>
+        <th>Financing Terms</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Secured</th>
+        <td><input id="limSecExisting" data-required="1" /></td>
+        <td><input id="limSecUtil" data-required="1" /></td>
+        <td><input id="limSecProp" data-required="1" /></td>
+        <td rowspan="4">
+          <div class="small"><strong>Insurer</strong></div>
+          <input id="insurer" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Credit Insurance Limit</strong></div>
+          <input id="creditInsLimit" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Advance Rate</strong></div>
+          <input id="advanceRate" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>TCS Rate</strong></div>
+          <input id="tcsRate" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Past 12 mth GMV</strong></div>
+          <input id="gmvPast12" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Forecast 12 mth GMV</strong></div>
+          <input id="gmvForecast12" data-required="1" />
+        </td>
+        <td rowspan="4">
+          <div class="small"><strong>Financing term</strong></div>
+          <input id="financingTerm" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Supplier Credit Days</strong></div>
+          <input id="supplierCreditDays" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Payment History / Delay Days</strong></div>
+          <input id="paymentHistory" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Dilution rate</strong></div>
+          <input id="dilutionRate" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>Peak / Average WC</strong></div>
+          <input id="peakAvgWc" data-required="1" />
+          <div class="small" style="margin-top:6px"><strong>LF Customer Since</strong></div>
+          <input id="customerSince" data-required="1" />
+        </td>
+      </tr>
+      <tr>
+        <th>Residual</th>
+        <td><input id="limResExisting" data-required="1" /></td>
+        <td><input id="limResUtil" data-required="1" /></td>
+        <td><input id="limResProp" data-required="1" /></td>
+      </tr>
+      <tr>
+        <th>Clean</th>
+        <td><input id="limCleanExisting" data-required="1" /></td>
+        <td><input id="limCleanUtil" data-required="1" /></td>
+        <td><input id="limCleanProp" data-required="1" /></td>
+      </tr>
+      <tr>
+        <th>Total</th>
+        <td><input id="limTotExisting" data-required="1" /></td>
+        <td><input id="limTotUtil" data-required="1" /></td>
+        <td><input id="limTotProp" data-required="1" /></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FULL FINANCIALS -->
+<div class="card">
+  <div class="section-title">Financial Highlights (Full)</div>
+  <table class="table" id="finTableFull">
+    <thead>
+      <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>23 vs 22</th><th>24 vs 23</th><th>Latest Quarter</th></tr>
+    </thead>
+    <tbody id="finBody"></tbody>
+  </table>
+</div>
+
+<!-- ANALYSIS -->
+<div class="card">
+  <div class="section-title">Automated Financial Analysis</div>
+  <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
+  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the demo prefill.</div>
+</div>
+
+<!-- LIQUIDITY -->
+<div class="card">
+  <div class="section-title">Liquidity Metrics</div>
+  <table class="table">
+    <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>Notes</th></tr>
+    <tr>
+      <td>Liquidity headroom</td>
+      <td><input id="liq22" data-required="1" /></td>
+      <td><input id="liq23" data-required="1" /></td>
+      <td><input id="liq24" data-required="1" /></td>
+      <td><textarea id="liqNotes" data-required="1"></textarea></td>
+    </tr>
+  </table>
+</div>
+
+<!-- OBLIGOR RATINGS (3 columns) -->
+<div class="card">
+  <div class="section-title">Obligor Ratings</div>
+  <div class="obligor-grid">
+    <div class="field">
+      <label>Internal Score</label>
+      <input id="intScore" data-required="1" />
+    </div>
+    <div class="field">
+      <label>External Rating</label>
+      <input id="extRating2" data-required="1" />
+    </div>
+    <div class="field">
+      <label>Rationale</label>
+      <textarea id="ratingRationale" data-required="1"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATION -->
+<div class="card">
+  <div class="section-title">Recommendation & Action Plan</div>
+  <textarea id="recommend" data-required="1"></textarea>
+</div>
+
+<!-- RISKS -->
+<div class="card">
+  <div class="section-title">Key Risks & Mitigants</div>
+  <textarea id="risks" data-required="1"></textarea>
+</div>
+
+</div><!-- /container -->
+
+<!-- FLOATING CHATBOT BUTTON -->
+<div id="chatFloatBtn" title="Ask about the analysis">💬</div>
+<div id="chatPanel">
+  <div style="font-weight:600;margin-bottom:6px">Analyst Chatbot</div>
+  <div class="note" style="margin-bottom:4px">Quick questions about the financial analysis & sources.</div>
+  <textarea id="floatQ" placeholder="e.g. Which 10-K section explains the EBITDA decline?"></textarea>
+  <button class="btn" id="floatAsk" style="margin-top:6px;width:100%">Ask</button>
+  <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
+</div>
+
+<script>
+
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s)"]+)/g;
+  return text.replace(urlRegex, url => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+}
+
+// ===== Utility helpers =====
+const WORKER_URL = "https://credit-memo-proxy.jerrizhou.workers.dev";
+
+function toNum(x) {
+  if (x === null || x === undefined) return null;
+  const cleaned = String(x).replace(/,/g, "").trim();
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function safeVal(id) {
+  var el = document.getElementById(id);
+  return el && typeof el.value === 'string' ? el.value : '';
+}
+
+
+const REQUIRED_SUMMARY_METRICS = [
+  "Revenue (RMB m)",
+  "Operating income (RMB m)",
+  "Net income (RMB m)"
+];
+
+const REQUIRED_FULL_METRICS = [
+  "Revenue",
+  "Gross Profit",
+  "EBITDA",
+  "Net Income",
+  "Cash & equivalents",
+  "Inventory",
+  "Total Debt",
+  "Equity",
+  "Free Cash Flow"
+];
+
+function normaliseSummaryRows(rows) {
+  const map = {};
+  rows.forEach(r => {
+    if (!r || !r.metric) return;
+    map[String(r.metric).trim()] = r;
+  });
+  return REQUIRED_SUMMARY_METRICS.map(name => {
+    const row = map[name];
+    if (row) return row;
+    return { metric: name, y2022: null, y2023: null, y2024: null };
+  });
+}
+
+function normaliseFullRows(rows) {
+  const map = {};
+  rows.forEach(r => {
+    if (!r || !r.metric) return;
+    map[String(r.metric).trim()] = r;
+  });
+  return REQUIRED_FULL_METRICS.map(name => {
+    const row = map[name];
+    if (row) return row;
+    return {
+      metric: name,
+      y2022: null,
+      y2023: null,
+      y2024: null,
+      latest_quarter: ""
+    };
+  });
+}
+
+// Recompute YoY columns from current tables
+function recomputeYoYFromTables() {
+  // Summary
+  const sumRows = document.querySelectorAll('#summaryFinTbl tbody tr');
+  sumRows.forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length >= 6) {
+      const y22 = toNum(tds[1].textContent);
+      const y23 = toNum(tds[2].textContent);
+      const y24 = toNum(tds[3].textContent);
+      let yoy23 = '-', yoy24 = '-';
+      if (y22 && y23) yoy23 = ((y23 - y22) / y22 * 100).toFixed(1) + '%';
+      if (y23 && y24) yoy24 = ((y24 - y23) / y23 * 100).toFixed(1) + '%';
+      tds[4].textContent = yoy23;
+      tds[5].textContent = yoy24;
+    }
+  });
+
+  // Full
+  const fullRows = document.querySelectorAll('#finBody tr');
+  fullRows.forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length >= 7) {
+      const y22 = toNum(tds[1].textContent);
+      const y23 = toNum(tds[2].textContent);
+      const y24 = toNum(tds[3].textContent);
+      let yoy23 = '-', yoy24 = '-';
+      if (y22 && y23) yoy23 = ((y23 - y22) / y22 * 100).toFixed(1) + '%';
+      if (y23 && y24) yoy24 = ((y24 - y23) / y23 * 100).toFixed(1) + '%';
+      tds[4].textContent = yoy23;
+      tds[5].textContent = yoy24;
+    }
+  });
+}
+
+// ===== Demo: PDD Holdings Prefill =====
+function prefillPDD() {
+  const d = {
+    buyerLookup: "PDD Holdings Inc.",
+    companyName: "PDD Holdings Inc.",
+    groupParentName: "PDD Holdings Inc.",
+    obligorLegalName: "PDD Holdings Inc.",
+    country: "China",
+    countryOfIncorp: "Cayman Islands",
+    business: "China-based e-commerce holding company operating Pinduoduo and the global cross-border platform Temu.",
+    coreBusinessActivities: "Online marketplace and value-for-money e-commerce focused on agricultural produce, general merchandise and cross-border consumer products.",
+    coreBusinessCustomers: "China, United States, key European markets",
+    coreBusinessWebsite: "https://investor.pddholdings.com",
+    marketCap: "~US$150bn+",
+    externalRating: "Not publicly rated",
+    internalRatingCurrent: "B(60)",
+    internalRatingProposed: "B(60)",
+
+    summary: {
+      "Revenue (RMB m)": {22:130558,23:247639,24:393836},
+      "Operating income (RMB m)": {22:36264,23:71876,24:132701},
+      "Net income (RMB m)": {22:31538,23:60027,24:112435}
+    },
+
+    full: {
+      Revenue:     {22:130558,23:247639,24:393836,q:"~RMB108bn latest quarter"},
+      GrossProfit: {22: 99095,23:155916,24:239936,q:"—"},
+      EBITDA:      {22: 36264,23: 71876,24:132701,q:"—"},
+      NetIncome:   {22: 31538,23: 60027,24:112435,q:"—"},
+      CashBank:    {22: 60000,23: 750000,24: 90000,q:"strong net cash"},
+      Inventory:   {22: 10000,23: 12000,24: 15000,q:"asset-light"},
+      TotalDebt:   {22: 15000,23: 18000,24: 20000,q:"no major maturities"},
+      Equity:      {22: 90000,23:120000,24:160000,q:"—"},
+      FreeCashFlow:{22: 25000,23: 30000,24: 40000,q:"growing"}
+    },
+
+    recommend: `Business strength/sustainability
+- PDD operates a scalable, data-driven e-commerce ecosystem (Pinduoduo + Temu) with strong competitive positioning.
+
+Financial standing conclusion
+- FY2024 results show rapid revenue growth, strong profitability and a solid net cash position.
+
+Prospects / outlook / tariff impact
+- Growth expected to continue, though tariff and regulatory changes (especially in the US) could pressure Temu margins.
+
+Payment behaviour / dilution
+- Payment performance through LF flows is satisfactory; no material dilution issues observed.
+
+Action plans
+1. Quarterly monitoring (financials, Temu updates, tariffs).
+2. Annual deep-dive analysis for renewal.`,
+
+    risks: `Source of repayment
+- Free cash flow from Pinduoduo & Temu, net cash and available facilities.
+
+Declining financial performance
+- Risks from competition and regulation; mitigated by flexible marketing spend and ability to slow overseas expansion.
+
+Refinancing risk (12-month view)
+- Limited near-term debt maturities; strong cash provides buffer.
+
+Trump's tariff impact
+- Temu exposed to US tariff changes; mitigants include pricing actions, sourcing diversification and sharing tariff impacts with suppliers/consumers.`
+  };
+
+  // Simple text fields
+  for (const k in d) {
+    if (typeof d[k] === 'string') {
+      const el = document.getElementById(k);
+      if (el) {
+        el.value = d[k];
+        el.dispatchEvent(new Event('input'));
+      }
+    }
+  }
+
+  // Summary table
+  const sumBody = document.querySelector('#summaryFinTbl tbody');
+  if (sumBody) {
+    sumBody.innerHTML = '';
+    for (const k in d.summary) {
+      const r = d.summary[k];
+      const yoy23 = ((r[23]-r[22]) / r[22] * 100).toFixed(1) + '%';
+      const yoy24 = ((r[24]-r[23]) / r[23] * 100).toFixed(1) + '%';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${k}</td>
+        <td>${r[22].toLocaleString()}</td>
+        <td>${r[23].toLocaleString()}</td>
+        <td>${r[24].toLocaleString()}</td>
+        <td>${yoy23}</td>
+        <td>${yoy24}</td>`;
+      sumBody.appendChild(tr);
+    }
+  }
+
+  // Full table
+  const fullBody = document.getElementById('finBody');
+  if (fullBody) {
+    fullBody.innerHTML = '';
+    for (const key in d.full) {
+      const r = d.full[key];
+      const label = key.replace(/([A-Z])/g, ' $1').trim();
+      const yoy23 = ((r[23]-r[22]) / r[22] * 100).toFixed(1) + '%';
+      const yoy24 = ((r[24]-r[23]) / r[23] * 100).toFixed(1) + '%';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${label}</td>
+        <td>${r[22].toLocaleString()}</td>
+        <td>${r[23].toLocaleString()}</td>
+        <td>${r[24].toLocaleString()}</td>
+        <td>${yoy23}</td>
+        <td>${yoy24}</td>
+        <td>${r.q}</td>`;
+      fullBody.appendChild(tr);
+    }
+  }
+
+  // Liquidity notes
+  const liqNotes = document.getElementById('liqNotes');
+  if (liqNotes) {
+    liqNotes.value = 'Net cash and asset-light model provide comfortable liquidity headroom above projected utilisation.';
+    liqNotes.dispatchEvent(new Event('input'));
+  }
+
+  // Recommendation & risks
+  const rec = document.getElementById('recommend');
+  if (rec) {
+    rec.value = d.recommend;
+    rec.dispatchEvent(new Event('input'));
+  }
+  const riskBox = document.getElementById('risks');
+  if (riskBox) {
+    riskBox.value = d.risks;
+    riskBox.dispatchEvent(new Event('input'));
+  }
+
+  // Analysis box demo
+  const analysisBox = document.getElementById('analysisBox');
+  if (analysisBox) {
+    analysisBox.innerHTML = `
+      <h4>3. Financial analysis (PDD demo)</h4>
+      <ul>
+        <li><strong>Revenue & profitability:</strong> very strong growth with high margins, driven by platform scale and Temu expansion.</li>
+        <li><strong>Balance sheet:</strong> net cash and limited refinancing risk.</li>
+        <li><strong>Cash flow:</strong> free cash flow is strong and rising, supported by an asset-light marketplace model.</li>
+        <li><strong>Outlook:</strong> positive but sensitive to regulatory and tariff developments.</li>
+      </ul>`;
+  }
+
+  recomputeYoYFromTables();
+}
+
+// ===== Auto Fetch via Worker =====
+async function autoFetchBuyer() {
+  const buyer = (safeVal('buyerLookup') || '').trim();
+  if (!buyer) {
+    alert('Please enter buyer name first');
+    return;
+  }
+
+  const btn = document.getElementById('refreshBuyer');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Fetching…';
+  }
+
+  const systemPrompt = `You are a senior credit analyst preparing a credit memo for a trade finance credit committee.
+Return ONLY a single valid JSON object (no markdown, no comments) with these keys:
+- exec_summary: string
+- key_highlights: string (bullet-style text separated by line breaks)
+- financial_analysis: string (HTML or markdown) with sections:
+  * Revenue & business mix
+  * Profitability & extraordinary items
+  * Cash flow
+  * Balance sheet & leverage
+  * Working capital & liquidity
+  * Outlook (12–18 months, including tariffs/macros where relevant)
+  The analysis should be medium-long (roughly 12–18 paragraphs or bullets).
+  You MUST explicitly comment on any metric where YoY change between 2022–2023 or 2023–2024 exceeds +/-10%.
+- recommendation: string (include facility request, risk category, outlook, payment behaviour, action plans).
+- risks: string (with sub-headings: Source of repayment, Declining financial performance, Refinancing risk (12-month), Trump's tariff impact if relevant).
+- buyer: object with:
+  borrower, group_parent, obligor_legal_name, country, country_of_incorp,
+  business_description, business_activities, key_customers_main_countries,
+  website, market_cap, external_rating, internal_rating_current, internal_rating_proposed.
+- summary_financials: array of {metric, y2022, y2023, y2024}.
+- full_financials: array of {metric, y2022, y2023, y2024, latest_quarter}.
+- liquidity: {y2022, y2023, y2024, notes}.
+- ratings: {internal_score, external_rating, rationale}.
+
+Key highlights must cover:
+- Obligor background, operations, years in business, key markets and market position.
+- If subsidiary and group financials are used: strategic importance / contribution.
+- If new obligor: how LF got to know the obligor.
+- If existing / renewal: brief relationship and payment behaviour.
+
+Financial analysis must:
+- Explain drivers for revenue and profitability growth/flat/decline/recovery.
+- Highlight extraordinary items separately from core business.
+- Discuss asset financing, key liabilities, debt composition and refinancing issues.
+- Comment on cash position, ability to meet short-term obligations, inventory and working capital, free cash flow.
+- Mention key liquidity and leverage ratios where helpful.
+- Explicitly comment on all >+/-10% YoY changes.
+
+Recommendation & action plan must:
+- Clearly state facility request (renew/new, product, indicative limit/tenor/advance rate).
+- Propose or reaffirm risk category (e.g. 'B') with justification.
+- Mention prospects/outlook including tariff impacts (12–18 months).
+- Comment on payment behaviour/dilution and whether limits/terms remain suitable.
+- Summarise monitoring and action plans.
+
+Key risks & mitigants must follow:
+- Source of repayment: free cash flow, cash, facilities headroom, capital support, insurance/NOA where relevant.
+- Declining performance: whether headwinds are temporary and liquidity buffer.
+- Refinancing risk: debts due in 12 months (if known), refinancings, liquidity, shareholder support.
+- Trump's tariff impact: if exposure is material, discuss expected impact and mitigants.
+
+Within the financial_analysis text, for each major conclusion (e.g. revenue growth, margin changes, cash flow strength, leverage, liquidity, outlook),
+append a short textual source note in brackets, e.g. (Source: FY2024 20-F MD&A) or (Source: latest earnings release).
+Do not fabricate page numbers or overly granular sections; keep sources high level (annual report, Form 20-F, earnings release, investor presentation).`;
+
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: "Prepare the JSON credit pack for obligor: " + buyer + ". Follow the schema exactly."
+      }
+    ]
+  };
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    console.log("Worker response:", data);
+
+    const content = data &&
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content;
+
+    if (!content) {
+      alert("AI did not return choices[0].message.content; see console.");
+      return;
+    }
+
+    let j;
+    try {
+      j = JSON.parse(content);
+    } catch (e) {
+      console.error("JSON parse failed:", e, content);
+      const execBox = document.getElementById('execSummary');
+      if (execBox) execBox.value = content;
+      alert("AI returned non-JSON text. Raw text placed into Executive Summary.");
+      return;
+    }
+
+    // Fill narratives
+    if (j.exec_summary) {
+      const el = document.getElementById('execSummary');
+      if (el) el.value = j.exec_summary;
+    }
+    if (j.key_highlights) {
+      const el = document.getElementById('highlights');
+      if (el) el.value = j.key_highlights;
+    }
+    if (j.recommendation) {
+      const el = document.getElementById('recommend');
+      if (el) el.value = j.recommendation;
+    }
+    if (j.risks) {
+      const el = document.getElementById('risks');
+      if (el) el.value = j.risks;
+    }
+
+    if (j.financial_analysis) {
+      const box = document.getElementById('analysisBox');
+      if (box) {
+        const fa = j.financial_analysis;
+        if (/<\/?[a-z][\s\S]*>/i.test(fa)) {
+          box.innerHTML = fa;
+        } else {
+          box.innerHTML = fa
+            .split(/\n\n+/)
+            .map(p => "<p>" + p.replace(/\n/g, "<br>") + "</p>")
+            .join("");
+        }
+      }
+    }
+
+    // Buyer info
+    if (j.buyer) {
+      const b = j.buyer;
+      const map = [
+        ['companyName', 'borrower'],
+        ['groupParentName', 'group_parent'],
+        ['obligorLegalName', 'obligor_legal_name'],
+        ['country', 'country'],
+        ['countryOfIncorp', 'country_of_incorp'],
+        ['business', 'business_description'],
+        ['coreBusinessActivities', 'business_activities'],
+        ['coreBusinessCustomers', 'key_customers_main_countries'],
+        ['coreBusinessWebsite', 'website'],
+        ['marketCap', 'market_cap'],
+        ['externalRating', 'external_rating'],
+        ['internalRatingCurrent', 'internal_rating_current'],
+        ['internalRatingProposed', 'internal_rating_proposed']
+      ];
+      map.forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el && b[key] != null) el.value = b[key];
+      });
+    }
+
+    // Summary financials (normalised to required metric set)
+    {
+      let rows = Array.isArray(j.summary_financials) ? j.summary_financials : [];
+      rows = normaliseSummaryRows(rows);
+      const tbody = document.querySelector('#summaryFinTbl tbody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        rows.forEach(row => {
+          const m = row.metric || '';
+          const y22 = row.y2022;
+          const y23 = row.y2023;
+          const y24 = row.y2024;
+          const n22 = toNum(y22);
+          const n23 = toNum(y23);
+          const n24 = toNum(y24);
+          let yoy23 = '-', yoy24 = '-';
+          if (n22 && n23) yoy23 = ((n23-n22)/n22*100).toFixed(1) + '%';
+          if (n23 && n24) yoy24 = ((n24-n23)/n23*100).toFixed(1) + '%';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${m}</td>
+            <td>${y22 ?? ''}</td>
+            <td>${y23 ?? ''}</td>
+            <td>${y24 ?? ''}</td>
+            <td>${yoy23}</td>
+            <td>${yoy24}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Full financials (normalised to required metric set)
+    {
+      let rows = Array.isArray(j.full_financials) ? j.full_financials : [];
+      rows = normaliseFullRows(rows);
+      const tbody = document.getElementById('finBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        rows.forEach(row => {
+          const m = row.metric || '';
+          const y22 = row.y2022;
+          const y23 = row.y2023;
+          const y24 = row.y2024;
+          const n22 = toNum(y22);
+          const n23 = toNum(y23);
+          const n24 = toNum(y24);
+          let yoy23 = '-', yoy24 = '-';
+          if (n22 && n23) yoy23 = ((n23-n22)/n22*100).toFixed(1) + '%';
+          if (n23 && n24) yoy24 = ((n24-n23)/n23*100).toFixed(1) + '%';
+          const latestQ = row.latest_quarter || '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${m}</td>
+            <td>${y22 ?? ''}</td>
+            <td>${y23 ?? ''}</td>
+            <td>${y24 ?? ''}</td>
+            <td>${yoy23}</td>
+            <td>${yoy24}</td>
+            <td>${latestQ}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Liquidity
+    if (j.liquidity) {
+      const liq = j.liquidity;
+      const l22 = document.getElementById('liq22');
+      const l23 = document.getElementById('liq23');
+      const l24 = document.getElementById('liq24');
+      const ln  = document.getElementById('liqNotes');
+      if (l22 && liq.y2022 != null) l22.value = liq.y2022;
+      if (l23 && liq.y2023 != null) l23.value = liq.y2023;
+      if (l24 && liq.y2024 != null) l24.value = liq.y2024;
+      if (ln  && liq.notes) ln.value = liq.notes;
+    }
+
+    // Ratings
+    if (j.ratings) {
+      const r = j.ratings;
+      const iscore = document.getElementById('intScore');
+      const er = document.getElementById('extRating2');
+      const rat = document.getElementById('ratingRationale');
+      if (iscore && r.internal_score) iscore.value = r.internal_score;
+      if (er && r.external_rating) er.value = r.external_rating;
+      if (rat && r.rationale) rat.value = r.rationale;
+    }
+
+    recomputeYoYFromTables();
+    alert('Auto-fill completed. Please review and adjust as needed.');
+
+  } catch (e) {
+    console.error(e);
+    alert('Fetch failed: ' + e.message);
+  } finally {
+    const btn = document.getElementById('refreshBuyer');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Fetch Data';
+    }
+  }
+}
+
+// ===== Refresh analysis from adjusted tables =====
+async function refreshAnalysisFromTables() {
+  // recompute YoY first
+  recomputeYoYFromTables();
+
+  const buyerName =
+    (safeVal('companyName') || '').trim() ||
+    (safeVal('buyerLookup') || '').trim() ||
+    'the obligor';
+
+  const summaryRows = [];
+  document.querySelectorAll('#summaryFinTbl tbody tr').forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length >= 4) {
+      summaryRows.push({
+        metric: tds[0].textContent.trim(),
+        y2022: toNum(tds[1].textContent),
+        y2023: toNum(tds[2].textContent),
+        y2024: toNum(tds[3].textContent)
+      });
+    }
+  });
+
+  const fullRows = [];
+  document.querySelectorAll('#finBody tr').forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length >= 7) {
+      fullRows.push({
+        metric: tds[0].textContent.trim(),
+        y2022: toNum(tds[1].textContent),
+        y2023: toNum(tds[2].textContent),
+        y2024: toNum(tds[3].textContent),
+        latest_quarter: tds[6].textContent.trim()
+      });
+    }
+  });
+
+  if (!summaryRows.length && !fullRows.length) {
+    alert('No financial rows detected to refresh analysis from.');
+    return;
+  }
+
+  const analysisBox = document.getElementById('analysisBox');
+  if (analysisBox) {
+    analysisBox.innerHTML = '<p><em>Refreshing analysis from manually adjusted tables…</em></p>';
+  }
+
+  const sys = `You are a senior credit analyst. The user has manually adjusted the financial tables in a credit memo.
+You will receive JSON with summary_financials and full_financials representing FINAL numbers.
+Do NOT override those numbers. Base your analysis strictly on the provided data.
+
+Return ONLY a single string in message.content (no JSON object), containing a detailed financial_analysis section in HTML or markdown.
+The analysis should be medium-long (roughly 12–18 structured paragraphs or bullets) with sub-headings:
+- Revenue & business mix
+- Profitability & extraordinary items
+- Cash flow
+- Balance sheet & leverage
+- Working capital & liquidity
+- Outlook (12–18 months).
+
+You MUST explicitly comment on every metric where YoY change between 2022–2023 or 2023–2024 exceeds +/-10%, quantifying the % change and explaining key drivers.
+
+Ensure any figures and percentages you mention are consistent with the table data.
+Within the analysis, for each major theme (growth, margins, cash flow, leverage, liquidity, outlook),
+add short textual source notes in brackets where appropriate, e.g. (Source: latest annual report) or (Source: Q4 2024 earnings release).
+Do not fabricate page numbers or very specific document sections.
+End with a short 'Sources' paragraph referring generically to latest annual/quarterly filings, earnings releases and investor presentations (no fabricated page numbers).`;
+
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: sys },
+      {
+        role: "user",
+        content: JSON.stringify({
+          obligor: buyerName,
+          summary_financials: summaryRows,
+          full_financials: fullRows
+        })
+      }
+    ]
+  };
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    console.log('Refresh analysis response:', data);
+
+    const content = data &&
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content;
+
+    if (!content) {
+      alert('No analysis content returned from refresh call.');
+      return;
+    }
+
+    if (analysisBox) {
+      if (/<\/?[a-z][\s\S]*>/i.test(content)) {
+        analysisBox.innerHTML = content;
+      } else {
+        analysisBox.innerHTML = content
+          .split(/\n\n+/)
+          .map(p => "<p>" + p.replace(/\n/g, "<br>") + "</p>")
+          .join("");
+      }
+    }
+
+    alert('Analysis refreshed based on updated tables.');
+
+  } catch (e) {
+    console.error(e);
+    alert('Refresh analysis failed: ' + e.message);
+  }
+}
+
+// ===== DOM Ready: wire up UI & chatbot =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Required field highlighting
+  const requiredEls = document.querySelectorAll('[data-required="1"]');
+  requiredEls.forEach(el => {
+    const toggle = () => {
+      if ((el.value || '').trim()) el.classList.remove('highlight');
+      else el.classList.add('highlight');
+    };
+    toggle();
+    el.addEventListener('input', toggle);
+  });
+
+  // Demo prefill button
+  const demoBtn = document.getElementById('prefillWalmartBtn');
+  if (demoBtn) demoBtn.addEventListener('click', prefillPDD);
+
+  // Floating chat toggle
+  const chatBtn = document.getElementById('chatFloatBtn');
+  const chatPanel = document.getElementById('chatPanel');
+  if (chatBtn && chatPanel) {
+    chatBtn.addEventListener('click', () => {
+      chatPanel.style.display = chatPanel.style.display === 'block' ? 'none' : 'block';
+    });
+  }
+
+  // Chatbot (Worker-backed)
+  const askBtn = document.getElementById('floatAsk');
+  const qBox = document.getElementById('floatQ');
+  const aBox = document.getElementById('floatA');
+  const chatHistory = [];
+
+  async function runChat() {
+    if (!qBox || !aBox || !askBtn) return;
+    const q = (qBox.value || '').trim();
+    if (!q) { aBox.textContent = 'Please type a question first.'; return; }
+
+    askBtn.disabled = true;
+    aBox.textContent = 'Thinking…';
+
+    const buyerName =
+      (safeVal('companyName') || '').trim() ||
+      (safeVal('buyerLookup') || '').trim() ||
+      'the obligor';
+
+    const analysisEl = document.getElementById('analysisBox');
+    let analysisText = '';
+    if (analysisEl) {
+      analysisText = (analysisEl.innerText || analysisEl.textContent || '').trim();
+    }
+    if (analysisText.length > 4000) {
+      analysisText = analysisText.slice(0, 4000);
+    }
+
+    const sysPrompt = `You are a senior credit officer assistant. Answer follow-up questions in clear English.
+Base your answers ONLY on the memo context supplied by the user (analysis extract, tables, narrative).
+When the officer asks where a number or conclusion comes from, point them to the relevant section
+(e.g. revenue table, EBITDA row, liquidity notes, bond maturity paragraph) instead of inventing new data.
+If the information is not available in the context, say so explicitly and suggest likely public sources
+(latest 20-F/10-K, earnings releases, bond offering circular), without fabricating page numbers.
+Keep answers concise but technically sound, suitable for an investment committee discussion.`;
+
+    const userContent = [
+      "Question from credit officer: " + q,
+      "",
+      "Current obligor: " + buyerName,
+      "",
+      "Extract of automated analysis and memo context (truncated):",
+      analysisText
+    ].join("\n");
+
+    const messages = [
+      { role: "system", content: sysPrompt },
+      ...chatHistory,
+      { role: "user", content: userContent }
+    ];
+
+    const payload = {
+      model: "gpt-4o-mini",
+      messages
+    };
+
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
+
+      const data = await res.json();
+      const content =
+        data &&
+        data.choices &&
+        data.choices[0] &&
+        data.choices[0].message &&
+        data.choices[0].message.content;
+
+      if (!content) {
+        aBox.textContent = "Chat failed: empty response from Worker.";
+        return;
+      }
+
+      chatHistory.push(
+        { role: "user", content: q },
+        { role: "assistant", content }
+      );
+
+      aBox.innerHTML = content
+        .split(/\n\n+/)
+        .map(p => "<p>" + p.replace(/\n/g, "<br>") + "</p>")
+        .join("");
+
+    } catch (e) {
+      console.error(e);
+      aBox.textContent = "Chat failed: " + e.message;
+    } finally {
+      askBtn.disabled = false;
+    }
+  }
+
+  if (askBtn) {
+    askBtn.addEventListener('click', () => { runChat(); });
+  }
+
+  // Fetch & refresh buttons
+  const fetchBtn = document.getElementById('refreshBuyer');
+  if (fetchBtn) fetchBtn.addEventListener('click', autoFetchBuyer);
+
+  const refreshBtn = document.getElementById('refreshAnalysis');
+  if (refreshBtn) refreshBtn.addEventListener('click', refreshAnalysisFromTables);
+});
+</script>
+
+</body>
+</html>
