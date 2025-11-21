@@ -1080,6 +1080,39 @@ Keep answers concise but technically sound, suitable for an investment committee
   if (refreshBtn) refreshBtn.addEventListener('click', refreshAnalysisFromTables);
 });
 </script>
+<script>
+// ---- FINAL SOURCE AUTOLINK (safe for contenteditable + no freeze) ----
+(function(){
+
+  function convertSources() {
+    const box = document.getElementById("analysisBox");
+    if (!box) return;
+
+    // 1) 获取纯文本 + 当前 HTML
+    let html = box.innerHTML;
+
+    // 2) 正则寻找 Source: xxx（没有URL的版本）
+    html = html.replace(/Source:\s*([^.<\n]+)/gi, (match, text) => {
+      const q = encodeURIComponent(text.trim());
+      return `Source: <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener noreferrer">${text.trim()}</a>`;
+    });
+
+    // 3) 暂时关闭 contenteditable 避免浏览器清洗标签
+    const prev = box.getAttribute("contenteditable");
+    box.setAttribute("contenteditable", "false");
+    box.innerHTML = html;
+    box.setAttribute("contenteditable", prev);
+  }
+
+  // ---- MutationObserver: 每次分析刷新都自动执行 ----
+  const target = document.getElementById("analysisBox");
+  if (target) {
+    const obs = new MutationObserver(() => convertSources());
+    obs.observe(target, { childList: true, subtree: true });
+  }
+
+})();
+</script>
 
 </body>
 </html>
