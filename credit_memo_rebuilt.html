@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Credit Memorandum — Rebuilt Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f5;
+    color: #111827;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+  .note {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    border: 1px solid #e5e7eb;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  label {
+    font-size: 13px;
+    color: #4b5563;
+  }
+  input, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    margin-top: 10px;
+  }
+  .row > div {
+    flex: 1;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #2563eb;
+    color: #ffffff;
+    white-space: nowrap;
+  }
+  .btn.secondary {
+    background: #ffffff;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 12px;
+  }
+  .grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .highlight-required {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 0 1px #facc15;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="card">
+    <h1>CREDIT MEMORANDUM</h1>
+    <div class="note">简化版 Demo：可自动调用 Cloudflare Worker，填充 Executive Summary 等字段。</div>
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label>Buyer / Obligor 名称</label>
+        <input id="buyerLookup" placeholder="例如：PDD Holdings, Walmart Inc." />
+      </div>
+      <button class="btn" id="btnFetch">Fetch Data（调用 Worker）</button>
+      <button class="btn secondary" id="btnDemo">Demo（PDD 示例）</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Executive Summary</div>
+    <textarea id="execSummary" data-required="1" placeholder="点击 Fetch Data 后，这里会自动生成买家的摘要说明。"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Key Highlights</div>
+    <textarea id="keyHighlights" placeholder="自动生成：背景、业务、市场地位、关系历史等要点。"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Recommendation & Action Plan</div>
+    <textarea id="recommendation" placeholder="自动生成：额度建议 / 风险类别 / 行动计划。"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Key Risks & Mitigants</div>
+    <textarea id="risks" placeholder="自动生成：主要风险 & 缓释措施。"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">调试信息（仅你可见）</div>
+    <textarea id="debugBox" style="min-height:70px;font-size:12px;" placeholder="这里会显示 Worker 返回的原始数据，方便排查。"></textarea>
+    <div class="note" style="margin-top:4px;">如果只看到 status: ok，说明 Worker 当前是测试版；如果看到 OpenAI 结构，说明已接好 API。</div>
+  </div>
+
+</div>
+
+<script>
+const WORKER_URL = "https://credit-memo-proxy.jerrizhou.workers.dev";
+
+function markRequired(){
+  document.querySelectorAll("[data-required='1']").forEach(el => {
+    if(!el.value.trim()) el.classList.add("highlight-required");
+    el.addEventListener("input", () => {
+      if(el.value.trim()) el.classList.remove("highlight-required");
+      else el.classList.add("highlight-required");
+    });
+  });
+}
+
+function prefillPDDDemo(){
+  const buyer = document.getElementById("buyerLookup");
+  if(buyer) buyer.value = "PDD Holdings";
+  const exec = document.getElementById("execSummary");
+  const hi = document.getElementById("keyHighlights");
+  const rec = document.getElementById("recommendation");
+  const rk = document.getElementById("risks");
+  if(exec) exec.value = "PDD Holdings is a China-based online commerce group operating Pinduoduo and Temu platforms, with strong revenue growth, high profitability and an asset-light marketplace model.";
+  if(hi) hi.value = "- Operates Pinduoduo (China) and Temu (global cross-border marketplace) with rapid GMV growth.\n- Asset-light model with strong cash generation and net cash position.\n- Key markets: China core; expanding into US and Europe via Temu.\n- Relationship history: existing counterparty with generally satisfactory payment behavior (no major overdue issues observed).";
+  if(rec) rec.value = "Recommend to maintain / renew trade credit facilities with cautious positive bias, given strong financial profile but elevated regulatory and tariff risks. Keep tenor within 90 days and monitor Temu overseas expansion closely.";
+  if(rk) rk.value = "- Regulatory & geo-political risk (US/China tension, data, tariffs).\n- Competition from other e-commerce platforms.\n- Overseas expansion risk via Temu. Mitigants include strong cash, flexible opex and ability to slow marketing spend.";
+  const dbg = document.getElementById("debugBox");
+  if(dbg) dbg.value = "已填入 PDD 示例数据（本地前端 Demo），没有调用 Worker。";
+}
+
+function fillFromJson(j){
+  try {
+    if(j.exec_summary) document.getElementById("execSummary").value = j.exec_summary;
+    if(j.key_highlights) document.getElementById("keyHighlights").value = j.key_highlights;
+    if(j.recommendation) document.getElementById("recommendation").value = j.recommendation;
+    if(j.risks) document.getElementById("risks").value = j.risks;
+  } catch(e) {
+    console.error("填充 JSON 时出错", e);
+  }
+}
+
+async function onFetchClick(){
+  const buyerEl = document.getElementById("buyerLookup");
+  const dbg = document.getElementById("debugBox");
+  const buyer = (buyerEl && buyerEl.value || "").trim();
+  if(!buyer){
+    alert("请先输入 Buyer / Obligor 名称");
+    return;
+  }
+  if(dbg) dbg.value = "Calling Worker...";
+
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: "You are a senior credit analyst. Respond ONLY with strict JSON: {\"exec_summary\": string, \"key_highlights\": string, \"recommendation\": string, \"risks\": string}. Do not include any extra text."
+      },
+      {
+        role: "user",
+        content: "Generate a credit memo style summary for obligor: " + buyer + ". Focus on business profile, financial strength, key risks and recommended limits."
+      }
+    ]
+  };
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(dbg) dbg.value = JSON.stringify(data, null, 2);
+
+    // Case 1: Worker 当前仍为测试版（status: ok）
+    if(data.status && data.message && !data.choices){
+      document.getElementById("execSummary").value =
+        "Worker 当前返回测试 JSON，不含 OpenAI 内容。\n\n" + JSON.stringify(data, null, 2) +
+        "\n\n要启用自动分析，请将 Worker 代码改为 OpenAI 代理版本。";
+      return;
+    }
+
+    // Case 2: Worker 作为 OpenAI 代理返回 chat.completions 结构
+    if(data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content){
+      const content = data.choices[0].message.content;
+      try {
+        const j = JSON.parse(content);
+        fillFromJson(j);
+      } catch(e){
+        document.getElementById("execSummary").value = content;
+      }
+      return;
+    }
+
+    // 其他情况：直接 dump
+    document.getElementById("execSummary").value = JSON.stringify(data, null, 2);
+
+  } catch(err){
+    console.error(err);
+    if(dbg) dbg.value = "Fetch 失败: " + err.message;
+    alert("Fetch 失败: " + err.message);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  markRequired();
+  const demoBtn = document.getElementById("btnDemo");
+  if(demoBtn) demoBtn.addEventListener("click", prefillPDDDemo);
+  const fetchBtn = document.getElementById("btnFetch");
+  if(fetchBtn) fetchBtn.addEventListener("click", onFetchClick);
+});
+</script>
+
+</body>
+</html>
