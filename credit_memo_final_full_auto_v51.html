@@ -665,7 +665,7 @@ function placeTourCard(step, opts = {}) {
 
   overlay.style.display = "block";
 
-  // modal 步骤：直接居中显示，不做滚动
+  // Step 0 (modal)
   if (step.type === "modal" || !step.targetId) {
     card.style.position = "fixed";
     card.style.top = "50%";
@@ -678,7 +678,7 @@ function placeTourCard(step, opts = {}) {
 
   const target = document.getElementById(step.targetId);
   if (!target) {
-    // 找不到目标时 fallback 到居中
+    // fallback
     card.style.position = "fixed";
     card.style.top = "50%";
     card.style.left = "50%";
@@ -688,39 +688,59 @@ function placeTourCard(step, opts = {}) {
     return;
   }
 
-  // 先隐藏卡片，再滚动 + 定位，避免从中间“路过 0”
+  // Hide card first to prevent flicker
   card.style.opacity = "0";
   card.style.pointerEvents = "none";
 
   if (!skipScroll) {
     try {
-      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-    } catch(e) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch (e) {
       target.scrollIntoView();
     }
   }
 
-  const delay = skipScroll ? 80 : 260;
+  const delay = skipScroll ? 60 : 260;
 
   setTimeout(() => {
     const rect = target.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const cardWidth = 360;
-    const approxHeight = 190;
+    const cardHeight = 200;
 
-    let top = rect.bottom + 12;
+    let top = rect.bottom + 14;   // 👈 精准向下偏移两行高度
     let left = rect.left;
 
-    if (left + cardWidth + 16 > viewportWidth) {
-      left = viewportWidth - cardWidth - 16;
-    }
-    if (left < 16) left = 16;
+    // ----- SPECIAL FIX FOR STEP 3 -----
+    if (step.id === 3) {
+      // Refresh Analysis 按钮往右偏
+      left = rect.left - 80;
 
-    if (top + approxHeight > viewportHeight - 16) {
-      top = rect.top - approxHeight - 12;
+      // 若按钮靠右，则限制 card 不溢出右边
+      if (left + cardWidth > viewportWidth - 20) {
+        left = viewportWidth - cardWidth - 20;
+      }
+
+      // 若按钮靠左，则限制不溢出左边
+      if (left < 20) left = 20;
+
+      // 卡片过低时改成放在按钮上方
+      if (top + cardHeight > viewportHeight - 20) {
+        top = rect.top - cardHeight - 14;
+      }
     }
-    if (top < 16) top = 16;
+    // ----------------------------------
+
+    // Generic bounds protection
+    if (left + cardWidth > viewportWidth - 20) {
+      left = viewportWidth - cardWidth - 20;
+    }
+    if (left < 20) left = 20;
+    if (top + cardHeight > viewportHeight - 20) {
+      top = rect.top - cardHeight - 14;
+    }
+    if (top < 20) top = 20;
 
     card.style.position = "fixed";
     card.style.top = top + "px";
