@@ -53,7 +53,6 @@ input,textarea,select{
 
 textarea{ min-height:80px; resize:vertical; }
 
-/* 之前的黄框样式保留但不再使用 */
 input.highlight,textarea.highlight{
   border-color:var(--missing-ring);
   box-shadow:0 0 0 1px var(--missing-ring);
@@ -100,31 +99,17 @@ input.highlight,textarea.highlight{
 .note{ font-size:12px;color:var(--muted); }
 .small{ font-size:12px; }
 
-/* Buyer name 视觉强调 */
-.pill-primary{
-  font-size:11px;
-  padding:2px 6px;
-  border-radius:999px;
-  background:rgba(11,102,195,0.08);
-  color:var(--accent);
-  font-weight:600;
-}
-#buyerLookup{
-  border-color:var(--accent);
-  box-shadow:0 0 0 1px rgba(11,102,195,0.20);
-}
-
 /* Obligor Ratings 3-column grid */
 .obligor-grid{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;
 }
 
-/* Parameters 三列 grid */
+/* Parameters 3-column grid */
 .param-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:16px 24px;
-  margin-top:4px;
+  margin-top:8px;
 }
 
 /* Floating Chatbot */
@@ -147,7 +132,7 @@ input.highlight,textarea.highlight{
 /* Hide during PDF */
 .pdf-hide{ display:none !important; }
 
-/* V7.3 — fetch spinner */
+/* V7.1 — fetch spinner */
 .spinner {
   width: 14px;height:14px;
   border:2px solid #fff;border-top-color:transparent;
@@ -156,66 +141,47 @@ input.highlight,textarea.highlight{
 }
 @keyframes spin { 100%{ transform:rotate(360deg); } }
 
-/* V7.3 — Onboarding coachmark (Style C: 轻量气泡 + 箭头) */
-.onboard-coachmark{
-  position:absolute;
-  max-width:260px;
-  background:#ffffff;
-  border-radius:10px;
-  padding:10px 12px 8px;
-  box-shadow:0 12px 30px rgba(15,23,42,0.28);
-  font-size:13px;
+/* ===== Onboarding overlay (V7.3) ===== */
+.tour-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.18);
   z-index:1000;
+  display:none;
 }
-.onboard-coachmark::after{
-  content:"";
+.tour-card{
   position:absolute;
-  width:10px;height:10px;
-  background:#ffffff;
-  transform:rotate(45deg);
-  box-shadow: -3px 3px 8px rgba(15,23,42,0.18);
+  max-width:360px;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 18px 45px rgba(15,23,42,0.35);
+  padding:14px 16px;
 }
-.onboard-coachmark[data-arrow="top"]::after{
-  bottom:-5px;left:24px;
-}
-.onboard-coachmark[data-arrow="bottom"]::after{
-  top:-5px;left:24px;
-}
-.onboard-coachmark[data-arrow="left"]::after{
-  right:-5px;top:16px;
-}
-.onboard-coachmark[data-arrow="right"]::after{
-  left:-5px;top:16px;
-}
-
-.onboard-coachmark-title{
-  font-weight:600;
+.tour-step-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--muted);
   margin-bottom:4px;
-  color:#111827;
 }
-.onboard-coachmark-body{
-  margin-bottom:8px;
-  color:#374151;
+.tour-title{
+  font-size:15px;
+  font-weight:600;
+  margin-bottom:6px;
 }
-.onboard-coachmark-footer{
+.tour-body{
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:10px;
+}
+.tour-actions{
   display:flex;
   justify-content:flex-end;
-  gap:6px;
+  gap:8px;
 }
-.onboard-btn{
-  border-radius:999px;
-  border:0;
-  padding:4px 10px;
-  font-size:11px;
-  cursor:pointer;
-}
-.onboard-btn-primary{
-  background:var(--accent);
-  color:#fff;
-}
-.onboard-btn-ghost{
-  background:transparent;
-  color:#6b7280;
+.small-btn{
+  font-size:12px;
+  padding:6px 12px;
 }
 </style>
 </head>
@@ -233,7 +199,7 @@ input.highlight,textarea.highlight{
     <!-- Row 1: Title + Date -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
       <div>
-        <h1 style="margin:0;font-size:22px">CREDIT MEMORANDUM</h1>
+        <h1 id="memoTitle" style="margin:0;font-size:22px;cursor:pointer;">CREDIT MEMORANDUM</h1>
       </div>
       <div style="text-align:right">
         <div class="note">Prepared date</div>
@@ -255,10 +221,7 @@ input.highlight,textarea.highlight{
   <!-- Buyer lookup row -->
   <div style="display:flex;gap:12px;margin-top:14px;align-items:flex-end">
     <div style="flex:1">
-      <label style="display:flex;align-items:center;gap:6px;">
-        <span>Buyer name</span>
-        <span class="pill-primary">Start here</span>
-      </label>
+      <label>Buyer name</label>
       <input id="buyerLookup" placeholder="Type buyer name (e.g. PDD Holdings, Walmart)" />
     </div>
 
@@ -266,7 +229,7 @@ input.highlight,textarea.highlight{
   </div>
 
   <div style="margin-top:16px" class="section-title">Executive Summary</div>
-  <textarea id="execSummary" data-required="1"></textarea>
+  <textarea id="execSummary"></textarea>
 
   <div style="margin-top:12px" class="section-title">Key Highlights</div>
   <textarea id="highlights"></textarea>
@@ -279,8 +242,8 @@ input.highlight,textarea.highlight{
     <!-- Column 1 -->
     <div class="field-col">
       <div class="field">
-        <label>Borrower / Obligor *</label>
-        <input id="companyName" data-required="1" />
+        <label>Borrower / Obligor</label>
+        <input id="companyName" />
       </div>
       <div class="field">
         <label>Group / Parent Legal Name</label>
@@ -353,99 +316,95 @@ input.highlight,textarea.highlight{
   </table>
 </div>
 
-<!-- CREDIT LIMITS -->
+<!-- CREDIT LIMITS + PARAMETERS -->
 <div class="card">
   <div class="section-title">Credit Limits</div>
   <table class="table">
     <thead>
       <tr>
-        <th>(US$m)</th>
-        <th>Existing</th>
-        <th>Current utilisation</th>
-        <th>Proposed</th>
+        <th>(US$m)</th><th>Existing</th><th>Current utilisation</th><th>Proposed</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <th>Secured</th>
-        <td><input id="limSecExisting" data-required="1" /></td>
-        <td><input id="limSecUtil" data-required="1" /></td>
-        <td><input id="limSecProp" data-required="1" /></td>
+        <td><input id="limSecExisting" /></td>
+        <td><input id="limSecUtil" /></td>
+        <td><input id="limSecProp" /></td>
       </tr>
       <tr>
         <th>Residual</th>
-        <td><input id="limResExisting" data-required="1" /></td>
-        <td><input id="limResUtil" data-required="1" /></td>
-        <td><input id="limResProp" data-required="1" /></td>
+        <td><input id="limResExisting" /></td>
+        <td><input id="limResUtil" /></td>
+        <td><input id="limResProp" /></td>
       </tr>
       <tr>
         <th>Clean</th>
-        <td><input id="limCleanExisting" data-required="1" /></td>
-        <td><input id="limCleanUtil" data-required="1" /></td>
-        <td><input id="limCleanProp" data-required="1" /></td>
+        <td><input id="limCleanExisting" /></td>
+        <td><input id="limCleanUtil" /></td>
+        <td><input id="limCleanProp" /></td>
       </tr>
       <tr>
         <th>Total</th>
-        <td><input id="limTotExisting" data-required="1" /></td>
-        <td><input id="limTotUtil" data-required="1" /></td>
-        <td><input id="limTotProp" data-required="1" /></td>
+        <td><input id="limTotExisting" /></td>
+        <td><input id="limTotUtil" /></td>
+        <td><input id="limTotProp" /></td>
       </tr>
     </tbody>
   </table>
 
-  <!-- PARAMETERS: 3-column grid -->
   <div class="section-title" style="margin-top:18px;">Parameters</div>
   <div class="param-grid">
     <div class="field">
       <label>Insurer</label>
-      <input id="insurer" data-required="1" />
+      <input id="insurer" />
     </div>
     <div class="field">
       <label>Credit Insurance Limit</label>
-      <input id="creditInsLimit" data-required="1" />
+      <input id="creditInsLimit" />
     </div>
     <div class="field">
       <label>Advance Rate</label>
-      <input id="advanceRate" data-required="1" />
+      <input id="advanceRate" />
     </div>
 
     <div class="field">
       <label>TCS Rate</label>
-      <input id="tcsRate" data-required="1" />
+      <input id="tcsRate" />
     </div>
     <div class="field">
       <label>Past 12 mth GMV</label>
-      <input id="gmvPast12" data-required="1" />
+      <input id="gmvPast12" />
     </div>
     <div class="field">
       <label>Forecast 12 mth GMV</label>
-      <input id="gmvForecast12" data-required="1" />
+      <input id="gmvForecast12" />
     </div>
 
     <div class="field">
       <label>Financing term</label>
-      <input id="financingTerm" data-required="1" />
+      <input id="financingTerm" />
     </div>
     <div class="field">
       <label>Supplier Credit Days</label>
-      <input id="supplierCreditDays" data-required="1" />
+      <input id="supplierCreditDays" />
     </div>
     <div class="field">
       <label>Payment History / Delay Days</label>
-      <input id="paymentHistory" data-required="1" />
+      <input id="paymentHistory" />
     </div>
 
     <div class="field">
       <label>Dilution rate</label>
-      <input id="dilutionRate" data-required="1" />
+      <input id="dilutionRate" />
     </div>
     <div class="field">
       <label>Peak / Average WC</label>
-      <input id="peakAvgWc" data-required="1" />
+      <input id="peakAvgWc" />
     </div>
     <div class="field">
       <label>LF Customer Since</label>
-      <input id="customerSince" data-required="1" />
+      <input id="customerSince" />
     </div>
   </div>
 </div>
@@ -480,7 +439,7 @@ input.highlight,textarea.highlight{
 <div class="card">
   <div class="section-title">Automated Financial Analysis</div>
   <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
-  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the auto-fill or refresh.</div>
+  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the auto-fill.</div>
 </div>
 
 <!-- SOURCES -->
@@ -499,10 +458,10 @@ input.highlight,textarea.highlight{
     <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>Notes</th></tr>
     <tr>
       <td>Liquidity headroom</td>
-      <td><input id="liq22" data-required="1" /></td>
-      <td><input id="liq23" data-required="1" /></td>
-      <td><input id="liq24" data-required="1" /></td>
-      <td><textarea id="liqNotes" data-required="1"></textarea></td>
+      <td><input id="liq22" /></td>
+      <td><input id="liq23" /></td>
+      <td><input id="liq24" /></td>
+      <td><textarea id="liqNotes"></textarea></td>
     </tr>
   </table>
 </div>
@@ -513,15 +472,15 @@ input.highlight,textarea.highlight{
   <div class="obligor-grid">
     <div class="field">
       <label>Internal Score</label>
-      <input id="intScore" data-required="1" />
+      <input id="intScore" />
     </div>
     <div class="field">
       <label>External Rating</label>
-      <input id="extRating2" data-required="1" />
+      <input id="extRating2" />
     </div>
     <div class="field">
       <label>Rationale</label>
-      <textarea id="ratingRationale" data-required="1"></textarea>
+      <textarea id="ratingRationale"></textarea>
     </div>
   </div>
 </div>
@@ -529,13 +488,13 @@ input.highlight,textarea.highlight{
 <!-- RECOMMENDATION -->
 <div class="card">
   <div class="section-title">Recommendation & Action Plan</div>
-  <textarea id="recommend" data-required="1"></textarea>
+  <textarea id="recommend"></textarea>
 </div>
 
 <!-- RISKS -->
 <div class="card">
   <div class="section-title">Key Risks & Mitigants</div>
-  <textarea id="risks" data-required="1"></textarea>
+  <textarea id="risks"></textarea>
 </div>
 
 </div><!-- /container -->
@@ -550,24 +509,38 @@ input.highlight,textarea.highlight{
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
+<!-- ONBOARDING OVERLAY (V7.3) -->
+<div id="tourOverlay" class="tour-overlay">
+  <div id="tourCard" class="tour-card">
+    <div id="tourStepLabel" class="tour-step-label"></div>
+    <div id="tourTitle" class="tour-title"></div>
+    <div id="tourBody" class="tour-body"></div>
+    <div class="tour-actions">
+      <button id="tourSkipBtn" class="btn-outline small-btn">Skip</button>
+      <button id="tourNextBtn" class="btn small-btn">Next</button>
+    </div>
+  </div>
+</div>
+
 <!-- PDF EXPORT LIBS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// ===== V7.3 Export PDF (container only + hide overlays) =====
+// ===== V7.3 Export PDF =====
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
 
   const chatBtn = document.getElementById("chatFloatBtn");
   const chatPanel = document.getElementById("chatPanel");
-  const coach = document.getElementById("onboardCoachmark");
+  const tourOverlay = document.getElementById("tourOverlay");
   if (chatBtn) chatBtn.classList.add("pdf-hide");
   if (chatPanel) chatPanel.classList.add("pdf-hide");
-  if (coach) coach.classList.add("pdf-hide");
+  if (tourOverlay) tourOverlay.classList.add("pdf-hide");
 
   const container = document.querySelector(".container");
 
+  // 将输入控件替换成纯文本 div
   const replacements = [];
   const controls = container.querySelectorAll("input, textarea, select");
   controls.forEach(el => {
@@ -604,8 +577,8 @@ async function exportPDF() {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  const marginX = 10;
-  const marginY = 10;
+  const marginX = 10;  // mm
+  const marginY = 10;  // mm
   const usableWidth = pageWidth - marginX * 2;
   const usableHeight = pageHeight - marginY * 2;
 
@@ -633,6 +606,7 @@ async function exportPDF() {
 
   pdf.save("credit_memo.pdf");
 
+  // 恢复输入控件
   replacements.forEach(({ el, span, origDisplay }) => {
     if (span && span.parentNode) span.parentNode.removeChild(span);
     el.style.display = origDisplay || "";
@@ -640,12 +614,145 @@ async function exportPDF() {
 
   if (chatBtn) chatBtn.classList.remove("pdf-hide");
   if (chatPanel) chatPanel.classList.remove("pdf-hide");
-  if (coach) coach.classList.remove("pdf-hide");
+  if (tourOverlay) tourOverlay.classList.remove("pdf-hide");
 }
 </script>
 
 <script>
-// ===== 原始 JS（保留 + V7.3 微调） =====
+// ===== Onboarding (V7.3) =====
+const TOUR_KEY = "credit_memo_tour_v73";
+let currentTourStep = 0;
+
+const TOUR_STEPS = [
+  {
+    id:0,
+    type:"modal",
+    stepLabel:"Step 0 — Welcome",
+    title:"Welcome!",
+    body:"This memo tool automatically fetches financials, narrative, key metrics and tables from public filings. Click Next to begin a quick 3-step tour."
+  },
+  {
+    id:1,
+    type:"anchor",
+    targetId:"buyerLookup",
+    stepLabel:"Step 1 — Enter buyer name",
+    title:"Step 1 — Enter buyer name",
+    body:"Start by typing the obligor name. This is required before auto-fetching financials and tables."
+  },
+  {
+    id:2,
+    type:"anchor",
+    targetId:"refreshBuyer",
+    stepLabel:"Step 2 — Fetch data",
+    title:"Step 2 — Fetch data",
+    body:"Click “Fetch Data” to retrieve filings, financial metrics, liquidity, ratings and narrative directly from public sources."
+  },
+  {
+    id:3,
+    type:"anchor",
+    targetId:"refreshAnalysisBtn",
+    stepLabel:"Step 3 — Refresh analysis",
+    title:"Step 3 — Refresh analysis",
+    body:"After reviewing or adjusting the financial tables, click “Refresh Analysis” to regenerate a fully updated credit analysis using the final numbers."
+  }
+];
+
+function renderTourStep() {
+  const overlay = document.getElementById("tourOverlay");
+  const card = document.getElementById("tourCard");
+  const labelEl = document.getElementById("tourStepLabel");
+  const titleEl = document.getElementById("tourTitle");
+  const bodyEl = document.getElementById("tourBody");
+  const nextBtn = document.getElementById("tourNextBtn");
+
+  if (!overlay || !card) return;
+  const step = TOUR_STEPS[currentTourStep];
+  if (!step) { endTour(); return; }
+
+  overlay.style.display = "block";
+
+  labelEl.textContent = step.stepLabel || "";
+  titleEl.textContent = step.title || "";
+  bodyEl.textContent = step.body || "";
+
+  card.style.position = "absolute";
+  card.style.maxWidth = "360px";
+
+  if (step.type === "modal") {
+    card.style.top = "50%";
+    card.style.left = "50%";
+    card.style.transform = "translate(-50%, -50%)";
+  } else {
+    const target = document.getElementById(step.targetId);
+    if (!target) {
+      card.style.top = "50%";
+      card.style.left = "50%";
+      card.style.transform = "translate(-50%, -50%)";
+    } else {
+      const rect = target.getBoundingClientRect();
+      const cardWidth = 360;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let top = rect.bottom + 12;
+      let left = rect.left;
+
+      if (left + cardWidth + 16 > viewportWidth) {
+        left = viewportWidth - cardWidth - 16;
+      }
+      const approxHeight = 180;
+      if (top + approxHeight > viewportHeight - 16) {
+        top = rect.top - approxHeight - 12;
+      }
+      if (top < 16) top = 16;
+      if (left < 16) left = 16;
+
+      card.style.top = top + "px";
+      card.style.left = left + "px";
+      card.style.transform = "none";
+    }
+  }
+
+  if (nextBtn) {
+    nextBtn.textContent = (currentTourStep === TOUR_STEPS.length - 1) ? "Done" : "Next";
+  }
+}
+
+function endTour() {
+  const overlay = document.getElementById("tourOverlay");
+  if (overlay) overlay.style.display = "none";
+  try {
+    localStorage.setItem(TOUR_KEY, "done");
+  } catch(e){}
+}
+
+function startTour(startIndex=0) {
+  currentTourStep = startIndex;
+  renderTourStep();
+}
+
+function resetTour() {
+  try {
+    localStorage.removeItem(TOUR_KEY);
+  } catch(e){}
+  startTour(0);
+}
+
+function maybeStartTourOnLoad() {
+  try {
+    const flag = localStorage.getItem(TOUR_KEY);
+    if (!flag) {
+      startTour(0);
+    }
+  } catch(e){
+    // localStorage unavailable, just run once
+    startTour(0);
+  }
+}
+</script>
+
+<script>
+// ===== 原始 JS（保留 + V7.x 微调） =====
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s)"]+)/g;
   return text.replace(urlRegex, url => {
@@ -980,7 +1087,7 @@ function applyCreditMetricsFromFull(fullRows) {
   });
 }
 
-// Auto Fetch via Worker (V7.3: spinner text)
+// Auto Fetch via Worker (V7.1: 加 spinner)
 async function autoFetchBuyer() {
   const buyer = (safeVal('buyerLookup') || '').trim();
   if (!buyer) {
@@ -1190,7 +1297,7 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
   }
 }
 
-// Refresh analysis from tables (V7.3: 按钮 loading)
+// Refresh analysis from tables (V7.1: 加按钮 loading)
 async function refreshAnalysisFromTables() {
   recomputeYoYFromTables();
 
@@ -1321,167 +1428,11 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
   }
 }
 
-/* ========== V7.3 Onboarding（Style C 气泡引导） ========== */
-const ONBOARD_KEY = "credit_memo_onboard_v73";
-
-const ONBOARD_STEPS = [
-  {
-    id: "buyer",
-    target: "#buyerLookup",
-    title: "Step 1 — Start with buyer name",
-    text: "Type the obligor / buyer name here. The assistant will use this to locate filings and build the memo.",
-    placement: "bottom-right",
-    arrow: "top"
-  },
-  {
-    id: "fetch",
-    target: "#refreshBuyer",
-    title: "Step 2 — Fetch data",
-    text: "Click “Fetch Data” to pull financials, narrative and tables directly from public filings.",
-    placement: "bottom-left",
-    arrow: "top"
-  },
-  {
-    id: "refresh",
-    target: "#refreshAnalysisBtn",
-    title: "Step 3 — Update analysis",
-    text: "After you tweak the numbers, hit “Refresh Analysis” to regenerate the financial commentary.",
-    placement: "top-left",
-    arrow: "bottom"
-  }
-];
-
-function createCoachmark() {
-  let node = document.getElementById("onboardCoachmark");
-  if (node) return node;
-  node = document.createElement("div");
-  node.id = "onboardCoachmark";
-  node.className = "onboard-coachmark";
-  node.innerHTML = `
-    <div class="onboard-coachmark-title"></div>
-    <div class="onboard-coachmark-body"></div>
-    <div class="onboard-coachmark-footer">
-      <button class="onboard-btn onboard-btn-ghost" data-role="skip">Skip</button>
-      <button class="onboard-btn onboard-btn-primary" data-role="next">Next</button>
-    </div>
-  `;
-  document.body.appendChild(node);
-  return node;
-}
-
-function positionCoachmark(step) {
-  const target = document.querySelector(step.target);
-  if (!target) return null;
-  const rect = target.getBoundingClientRect();
-  const coach = createCoachmark();
-  const scrollY = window.scrollY || document.documentElement.scrollTop;
-  const scrollX = window.scrollX || document.documentElement.scrollLeft;
-
-  let top = 0, left = 0;
-
-  switch (step.placement) {
-    case "bottom-right":
-      top = rect.bottom + 10 + scrollY;
-      left = rect.left + scrollX;
-      coach.dataset.arrow = step.arrow || "top";
-      break;
-    case "bottom-left":
-      top = rect.bottom + 10 + scrollY;
-      left = rect.right - 260 + scrollX;
-      coach.dataset.arrow = step.arrow || "top";
-      break;
-    case "top-left":
-      top = rect.top + scrollY - 90;
-      left = rect.right - 260 + scrollX;
-      coach.dataset.arrow = step.arrow || "bottom";
-      break;
-    default:
-      top = rect.bottom + 10 + scrollY;
-      left = rect.left + scrollX;
-      coach.dataset.arrow = step.arrow || "top";
-  }
-
-  coach.style.top = Math.max(top, scrollY + 10) + "px";
-  coach.style.left = Math.max(left, scrollX + 10) + "px";
-
-  target.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  return coach;
-}
-
-function startOnboarding(force) {
-  try {
-    if (!force && window.localStorage && localStorage.getItem(ONBOARD_KEY) === "done") {
-      return;
-    }
-  } catch(e) {}
-
-  let index = 0;
-  const coach = createCoachmark();
-
-  function showStep(i) {
-    if (i < 0 || i >= ONBOARD_STEPS.length) {
-      finish();
-      return;
-    }
-    index = i;
-    const step = ONBOARD_STEPS[index];
-    const placed = positionCoachmark(step);
-    if (!placed) {
-      finish();
-      return;
-    }
-    placed.querySelector(".onboard-coachmark-title").textContent = step.title;
-    placed.querySelector(".onboard-coachmark-body").textContent = step.text;
-
-    const nextBtn = placed.querySelector('[data-role="next"]');
-    if (index === ONBOARD_STEPS.length - 1) {
-      nextBtn.textContent = "Done";
-    } else {
-      nextBtn.textContent = "Next";
-    }
-  }
-
-  function finish(skip) {
-    if (!skip) {
-      try {
-        if (window.localStorage) localStorage.setItem(ONBOARD_KEY, "done");
-      } catch(e){}
-    }
-    const node = document.getElementById("onboardCoachmark");
-    if (node && node.parentNode) node.parentNode.removeChild(node);
-    window.removeEventListener("resize", handleReposition);
-    window.removeEventListener("scroll", handleReposition);
-  }
-
-  function handleReposition() {
-    positionCoachmark(ONBOARD_STEPS[index]);
-  }
-
-  showStep(0);
-
-  const nextHandler = (ev) => {
-    if (ev.target && ev.target.dataset && ev.target.dataset.role === "next") {
-      if (index === ONBOARD_STEPS.length - 1) finish(false);
-      else showStep(index + 1);
-    }
-    if (ev.target && ev.target.dataset && ev.target.dataset.role === "skip") {
-      finish(true);
-    }
-  };
-
-  coach.addEventListener("click", nextHandler);
-  window.addEventListener("resize", handleReposition);
-  window.addEventListener("scroll", handleReposition);
-}
-
 // DOM Ready: wire up
 document.addEventListener('DOMContentLoaded', () => {
   buildCreditMetricsTable();
 
-  // V7.3: 不再统一黄框高亮，只清理旧 class
-  const requiredEls = document.querySelectorAll('[data-required="1"]');
-  requiredEls.forEach(el => el.classList.remove('highlight'));
+  // 不再自动标黄必填项（根据你最新要求，去掉高亮逻辑）
 
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
@@ -1587,8 +1538,47 @@ Keep answers concise but technically sound, suitable for an investment committee
     fetchBtn._v68Bound = true;
   }
 
-  // 启动 Onboarding（只在第一次）
-  startOnboarding(false);
+  // Onboarding: Next / Skip buttons
+  const nextBtn = document.getElementById("tourNextBtn");
+  const skipBtn = document.getElementById("tourSkipBtn");
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      if (currentTourStep < TOUR_STEPS.length - 1) {
+        currentTourStep += 1;
+        renderTourStep();
+      } else {
+        endTour();
+      }
+    });
+  }
+  if (skipBtn) {
+    skipBtn.addEventListener("click", () => {
+      endTour();
+    });
+  }
+
+  // Hidden reset: triple-click title
+  const titleEl = document.getElementById("memoTitle");
+  if (titleEl) {
+    let clickCount = 0;
+    let timer = null;
+    titleEl.addEventListener("click", () => {
+      clickCount += 1;
+      if (clickCount === 1) {
+        timer = setTimeout(() => {
+          clickCount = 0;
+        }, 600);
+      }
+      if (clickCount >= 3) {
+        clickCount = 0;
+        if (timer) clearTimeout(timer);
+        resetTour();
+      }
+    });
+  }
+
+  // First load: maybe show tour
+  maybeStartTourOnLoad();
 });
 </script>
 
