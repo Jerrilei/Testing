@@ -665,7 +665,6 @@ function placeTourCard(step, opts = {}) {
 
   overlay.style.display = "block";
 
-  // Step 0 (modal)
   if (step.type === "modal" || !step.targetId) {
     card.style.position = "fixed";
     card.style.top = "50%";
@@ -673,35 +672,34 @@ function placeTourCard(step, opts = {}) {
     card.style.transform = "translate(-50%, -50%)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
+    console.log("TourCard placed modal center");
     return;
   }
 
   const target = document.getElementById(step.targetId);
   if (!target) {
-    // fallback
     card.style.position = "fixed";
     card.style.top = "50%";
     card.style.left = "50%";
     card.style.transform = "translate(-50%, -50%)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
+    console.log("TourCard fallback center – target missing:", step.targetId);
     return;
   }
 
-  // Hide card first to prevent flicker
   card.style.opacity = "0";
   card.style.pointerEvents = "none";
 
   if (!skipScroll) {
     try {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
-    } catch (e) {
+    } catch(e) {
       target.scrollIntoView();
     }
   }
 
   const delay = skipScroll ? 60 : 260;
-
   setTimeout(() => {
     const rect = target.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -709,38 +707,41 @@ function placeTourCard(step, opts = {}) {
     const cardWidth = 360;
     const cardHeight = 200;
 
-    let top = rect.bottom + 14;   // 👈 精准向下偏移两行高度
-    let left = rect.left;
+    let left, top;
 
-    // ----- SPECIAL FIX FOR STEP 3 -----
     if (step.id === 3) {
-      // Refresh Analysis 按钮往右偏
-      left = rect.left - 80;
+      left = rect.left;
+      top = rect.bottom + 12;
 
-      // 若按钮靠右，则限制 card 不溢出右边
+      // debug output
+      console.log("Step3 target rect:", rect);
+      console.log("Initial left/top:", left, top);
+
+      if (top + cardHeight > viewportHeight - 20) {
+        top = rect.top - cardHeight - 12;
+        console.log("Step3 moved above target because bottom space insufficient");
+      }
+      if (left + cardWidth > viewportWidth - 20) {
+        left = viewportWidth - cardWidth - 20;
+        console.log("Step3 adjusted left because too far right");
+      }
+      if (left < 20) {
+        left = 20;
+        console.log("Step3 adjusted left because too far left");
+      }
+    } else {
+      left = rect.left;
+      top = rect.bottom + 12;
+
       if (left + cardWidth > viewportWidth - 20) {
         left = viewportWidth - cardWidth - 20;
       }
-
-      // 若按钮靠左，则限制不溢出左边
       if (left < 20) left = 20;
-
-      // 卡片过低时改成放在按钮上方
       if (top + cardHeight > viewportHeight - 20) {
-        top = rect.top - cardHeight - 14;
+        top = rect.top - cardHeight - 12;
       }
+      if (top < 20) top = 20;
     }
-    // ----------------------------------
-
-    // Generic bounds protection
-    if (left + cardWidth > viewportWidth - 20) {
-      left = viewportWidth - cardWidth - 20;
-    }
-    if (left < 20) left = 20;
-    if (top + cardHeight > viewportHeight - 20) {
-      top = rect.top - cardHeight - 14;
-    }
-    if (top < 20) top = 20;
 
     card.style.position = "fixed";
     card.style.top = top + "px";
@@ -748,6 +749,8 @@ function placeTourCard(step, opts = {}) {
     card.style.transform = "translateY(0)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
+
+    console.log("TourCard placed final left/top:", left, top);
   }, delay);
 }
 
