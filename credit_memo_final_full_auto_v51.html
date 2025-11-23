@@ -51,11 +51,15 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       <h1 style="margin:0;font-size:22px">CREDIT MEMORANDUM</h1>
       <div class="note">Template aligned to PDF memo. Required fields are ringed in amber until completed.</div>
     </div>
-    <div class="header-actions">
-      <div style="text-align:right">
-        <div class="note">Prepared date</div>
-        <div id="prepDate">2025-01-01</div>
-      </div>
+    <div class="header-actions" style="display:flex;align-items:flex-end;gap:12px;">
+  
+     <!-- Export PDF button now lives here -->
+     <button class="btn-outline" onclick="exportPDF()">Export PDF</button>
+
+     <div style="text-align:right">
+       <div class="note">Prepared date</div>
+       <div id="prepDate">2025-01-01</div>
+     </div>
     </div>
   </div>
 
@@ -65,7 +69,6 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
     </div>
     <button class="btn" id="refreshBuyer" onclick="autoFetchBuyer()">Fetch Data</button>
-    <button class="btn-outline" id="prefillWalmartBtn">Demo (PDD)</button>
   </div>
 
   <div style="margin-top:16px" class="section-title">Executive Summary</div>
@@ -230,7 +233,6 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
     <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
     <div style="display:flex;gap:10px;">
       <button class="btn" onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
-      <button class="btn-outline" onclick="exportPDF()">Export PDF</button>
     </div>
   </div>
 
@@ -1283,9 +1285,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle();
     el.addEventListener('input', toggle);
   });
-
-  const demoBtn = document.getElementById('prefillWalmartBtn');
-  if (demoBtn) demoBtn.addEventListener('click', prefillPDD);
 
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
