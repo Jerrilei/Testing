@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor v7.3</title>
+<title>Credit Memorandum — Final Editor v7.3.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -53,11 +53,6 @@ input,textarea,select{
 
 textarea{ min-height:80px; resize:vertical; }
 
-input.highlight,textarea.highlight{
-  border-color:var(--missing-ring);
-  box-shadow:0 0 0 1px var(--missing-ring);
-}
-
 .table{
   width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;
 }
@@ -88,10 +83,11 @@ input.highlight,textarea.highlight{
   align-items:stretch;gap:8px;
 }
 
+/* Buyer info layout B */
 .buyer-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:18px;
+  gap:18px 24px;
 }
 
 .field-col{ display:flex;flex-direction:column;gap:10px; }
@@ -132,7 +128,7 @@ input.highlight,textarea.highlight{
 /* Hide during PDF */
 .pdf-hide{ display:none !important; }
 
-/* V7.1 — fetch spinner */
+/* fetch spinner */
 .spinner {
   width: 14px;height:14px;
   border:2px solid #fff;border-top-color:transparent;
@@ -141,7 +137,7 @@ input.highlight,textarea.highlight{
 }
 @keyframes spin { 100%{ transform:rotate(360deg); } }
 
-/* ===== Onboarding overlay (V7.3) ===== */
+/* ===== Onboarding overlay (V7.3.2) ===== */
 .tour-overlay{
   position:fixed;
   inset:0;
@@ -190,7 +186,7 @@ input.highlight,textarea.highlight{
 <div class="container">
 
 <!-- ========================= -->
-<!-- V7.3 HEADER BLOCK -->
+<!-- V7.3.2 HEADER BLOCK -->
 <!-- ========================= -->
 
 <div class="card">
@@ -239,19 +235,19 @@ input.highlight,textarea.highlight{
 <div class="card">
   <div class="section-title">Buyer Information</div>
   <div class="buyer-grid">
-    <!-- Column 1 -->
+    <!-- Column 1: Identity & geography -->
     <div class="field-col">
       <div class="field">
         <label>Borrower / Obligor</label>
         <input id="companyName" />
       </div>
       <div class="field">
-        <label>Group / Parent Legal Name</label>
-        <input id="groupParentName" />
-      </div>
-      <div class="field">
         <label>Obligor Legal Name</label>
         <input id="obligorLegalName" />
+      </div>
+      <div class="field">
+        <label>Group / Parent Legal Name</label>
+        <input id="groupParentName" />
       </div>
       <div class="field">
         <label>Country</label>
@@ -263,7 +259,7 @@ input.highlight,textarea.highlight{
       </div>
     </div>
 
-    <!-- Column 2 -->
+    <!-- Column 2: Business narrative -->
     <div class="field-col">
       <div class="field">
         <label>Business description</label>
@@ -274,17 +270,17 @@ input.highlight,textarea.highlight{
         <textarea id="coreBusinessActivities"></textarea>
       </div>
       <div class="field">
-        <label>Key Customers</label>
+        <label>Key Customers / Main markets</label>
         <textarea id="coreBusinessCustomers"></textarea>
       </div>
+    </div>
+
+    <!-- Column 3: Market data & ratings -->
+    <div class="field-col">
       <div class="field">
         <label>Website</label>
         <input id="coreBusinessWebsite" />
       </div>
-    </div>
-
-    <!-- Column 3 -->
-    <div class="field-col">
       <div class="field">
         <label>Market Cap</label>
         <input id="marketCap" />
@@ -509,7 +505,7 @@ input.highlight,textarea.highlight{
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
-<!-- ONBOARDING OVERLAY (V7.3) -->
+<!-- ONBOARDING OVERLAY (V7.3.2) -->
 <div id="tourOverlay" class="tour-overlay">
   <div id="tourCard" class="tour-card">
     <div id="tourStepLabel" class="tour-step-label"></div>
@@ -527,7 +523,7 @@ input.highlight,textarea.highlight{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// ===== V7.3 Export PDF =====
+// ===== Export PDF =====
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
 
@@ -619,8 +615,8 @@ async function exportPDF() {
 </script>
 
 <script>
-// ===== Onboarding (V7.3) =====
-const TOUR_KEY = "credit_memo_tour_v73";
+// ===== Onboarding (V7.3.2, smooth scroll版) =====
+const TOUR_KEY = "credit_memo_tour_v73_2";
 let currentTourStep = 0;
 
 const TOUR_STEPS = [
@@ -629,7 +625,7 @@ const TOUR_STEPS = [
     type:"modal",
     stepLabel:"Step 0 — Welcome",
     title:"Welcome!",
-    body:"This memo tool automatically fetches financials, narrative, key metrics and tables from public filings. Click Next to begin a quick 3-step tour."
+    body:"This memo tool automatically fetches financials, narrative, key metrics and tables from public filings. Click Next for a quick 3-step tour."
   },
   {
     id:1,
@@ -637,7 +633,7 @@ const TOUR_STEPS = [
     targetId:"buyerLookup",
     stepLabel:"Step 1 — Enter buyer name",
     title:"Step 1 — Enter buyer name",
-    body:"Start by typing the obligor name. This is required before auto-fetching financials and tables."
+    body:"Start by typing the obligor name here. This is required before auto-fetching financials and tables."
   },
   {
     id:2,
@@ -670,46 +666,56 @@ function renderTourStep() {
   if (!step) { endTour(); return; }
 
   overlay.style.display = "block";
-
   labelEl.textContent = step.stepLabel || "";
   titleEl.textContent = step.title || "";
   bodyEl.textContent = step.body || "";
-
-  card.style.position = "absolute";
   card.style.maxWidth = "360px";
 
+  // 默认先居中，避免闪一下
+  card.style.top = "50%";
+  card.style.left = "50%";
+  card.style.transform = "translate(-50%, -50%)";
+
   if (step.type === "modal") {
-    card.style.top = "50%";
-    card.style.left = "50%";
-    card.style.transform = "translate(-50%, -50%)";
+    // welcome直接使用居中
   } else {
     const target = document.getElementById(step.targetId);
     if (!target) {
-      card.style.top = "50%";
-      card.style.left = "50%";
-      card.style.transform = "translate(-50%, -50%)";
+      // fallback: 居中
     } else {
-      const rect = target.getBoundingClientRect();
-      const cardWidth = 360;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      let top = rect.bottom + 12;
-      let left = rect.left;
-
-      if (left + cardWidth + 16 > viewportWidth) {
-        left = viewportWidth - cardWidth - 16;
+      // 平滑滚动到目标附近，再定位浮框
+      try {
+        target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      } catch(e) {
+        target.scrollIntoView();
       }
-      const approxHeight = 180;
-      if (top + approxHeight > viewportHeight - 16) {
-        top = rect.top - approxHeight - 12;
-      }
-      if (top < 16) top = 16;
-      if (left < 16) left = 16;
 
-      card.style.top = top + "px";
-      card.style.left = left + "px";
-      card.style.transform = "none";
+      // 等滚动一会再计算位置，避免“看上去消失”
+      setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const cardWidth = 360;
+        const approxHeight = 190;
+
+        let top = rect.bottom + 12;
+        let left = rect.left;
+
+        if (left + cardWidth + 16 > viewportWidth) {
+          left = viewportWidth - cardWidth - 16;
+        }
+        if (left < 16) left = 16;
+
+        // 如果下面放不下，就放到目标上方
+        if (top + approxHeight > viewportHeight - 16) {
+          top = rect.top - approxHeight - 12;
+        }
+        if (top < 16) top = 16;
+
+        card.style.top = top + "px";
+        card.style.left = left + "px";
+        card.style.transform = "none";
+      }, 380);
     }
   }
 
@@ -745,14 +751,21 @@ function maybeStartTourOnLoad() {
       startTour(0);
     }
   } catch(e){
-    // localStorage unavailable, just run once
+    // localStorage unavailable, 就当每次都跑一遍
     startTour(0);
   }
 }
+
+// 窗口尺寸变化 / 滚动时轻微调整位置，避免偏离
+window.addEventListener("resize", () => {
+  const overlay = document.getElementById("tourOverlay");
+  if (!overlay || overlay.style.display !== "block") return;
+  renderTourStep();
+});
 </script>
 
 <script>
-// ===== 原始 JS（保留 + V7.x 微调） =====
+// ===== 业务逻辑 JS（保留 + 小幅微调） =====
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s)"]+)/g;
   return text.replace(urlRegex, url => {
@@ -1087,7 +1100,7 @@ function applyCreditMetricsFromFull(fullRows) {
   });
 }
 
-// Auto Fetch via Worker (V7.1: 加 spinner)
+// Auto Fetch via Worker
 async function autoFetchBuyer() {
   const buyer = (safeVal('buyerLookup') || '').trim();
   if (!buyer) {
@@ -1297,7 +1310,7 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
   }
 }
 
-// Refresh analysis from tables (V7.1: 加按钮 loading)
+// Refresh analysis from tables
 async function refreshAnalysisFromTables() {
   recomputeYoYFromTables();
 
@@ -1431,8 +1444,6 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
 // DOM Ready: wire up
 document.addEventListener('DOMContentLoaded', () => {
   buildCreditMetricsTable();
-
-  // 不再自动标黄必填项（根据你最新要求，去掉高亮逻辑）
 
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
@@ -1572,6 +1583,7 @@ Keep answers concise but technically sound, suitable for an investment committee
       if (clickCount >= 3) {
         clickCount = 0;
         if (timer) clearTimeout(timer);
+        console.log("Tour reset via title triple-click");
         resetTour();
       }
     });
