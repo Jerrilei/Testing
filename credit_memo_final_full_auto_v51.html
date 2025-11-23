@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor v7.3.2</title>
+<title>Credit Memorandum — Final Editor v7.3.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -137,7 +137,7 @@ textarea{ min-height:80px; resize:vertical; }
 }
 @keyframes spin { 100%{ transform:rotate(360deg); } }
 
-/* ===== Onboarding overlay (V7.3.2) ===== */
+/* ===== Onboarding overlay (V7.3.3) ===== */
 .tour-overlay{
   position:fixed;
   inset:0;
@@ -146,12 +146,15 @@ textarea{ min-height:80px; resize:vertical; }
   display:none;
 }
 .tour-card{
-  position:absolute;
+  position:fixed;
   max-width:360px;
   background:#fff;
   border-radius:12px;
   box-shadow:0 18px 45px rgba(15,23,42,0.35);
   padding:14px 16px;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .2s ease, transform .2s ease;
 }
 .tour-step-label{
   font-size:11px;
@@ -186,7 +189,7 @@ textarea{ min-height:80px; resize:vertical; }
 <div class="container">
 
 <!-- ========================= -->
-<!-- V7.3.2 HEADER BLOCK -->
+<!-- V7.3.3 HEADER BLOCK -->
 <!-- ========================= -->
 
 <div class="card">
@@ -505,7 +508,7 @@ textarea{ min-height:80px; resize:vertical; }
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
-<!-- ONBOARDING OVERLAY (V7.3.2) -->
+<!-- ONBOARDING OVERLAY -->
 <div id="tourOverlay" class="tour-overlay">
   <div id="tourCard" class="tour-card">
     <div id="tourStepLabel" class="tour-step-label"></div>
@@ -615,8 +618,8 @@ async function exportPDF() {
 </script>
 
 <script>
-// ===== Onboarding (V7.3.2, smooth scroll版) =====
-const TOUR_KEY = "credit_memo_tour_v73_2";
+// ===== Onboarding (V7.3.3, smoother & no "passing 0") =====
+const TOUR_KEY = "credit_memo_tour_v73_3";
 let currentTourStep = 0;
 
 const TOUR_STEPS = [
@@ -653,6 +656,81 @@ const TOUR_STEPS = [
   }
 ];
 
+function placeTourCard(step, opts = {}) {
+  const { skipScroll = false } = opts;
+  const overlay = document.getElementById("tourOverlay");
+  const card = document.getElementById("tourCard");
+  if (!overlay || !card) return;
+  if (!step) { endTour(); return; }
+
+  overlay.style.display = "block";
+
+  // modal 步骤：直接居中显示，不做滚动
+  if (step.type === "modal" || !step.targetId) {
+    card.style.position = "fixed";
+    card.style.top = "50%";
+    card.style.left = "50%";
+    card.style.transform = "translate(-50%, -50%)";
+    card.style.opacity = "1";
+    card.style.pointerEvents = "auto";
+    return;
+  }
+
+  const target = document.getElementById(step.targetId);
+  if (!target) {
+    // 找不到目标时 fallback 到居中
+    card.style.position = "fixed";
+    card.style.top = "50%";
+    card.style.left = "50%";
+    card.style.transform = "translate(-50%, -50%)";
+    card.style.opacity = "1";
+    card.style.pointerEvents = "auto";
+    return;
+  }
+
+  // 先隐藏卡片，再滚动 + 定位，避免从中间“路过 0”
+  card.style.opacity = "0";
+  card.style.pointerEvents = "none";
+
+  if (!skipScroll) {
+    try {
+      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    } catch(e) {
+      target.scrollIntoView();
+    }
+  }
+
+  const delay = skipScroll ? 80 : 260;
+
+  setTimeout(() => {
+    const rect = target.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const cardWidth = 360;
+    const approxHeight = 190;
+
+    let top = rect.bottom + 12;
+    let left = rect.left;
+
+    if (left + cardWidth + 16 > viewportWidth) {
+      left = viewportWidth - cardWidth - 16;
+    }
+    if (left < 16) left = 16;
+
+    if (top + approxHeight > viewportHeight - 16) {
+      top = rect.top - approxHeight - 12;
+    }
+    if (top < 16) top = 16;
+
+    card.style.position = "fixed";
+    card.style.top = top + "px";
+    card.style.left = left + "px";
+    card.style.transform = "translateY(0)";
+    card.style.opacity = "1";
+    card.style.pointerEvents = "auto";
+  }, delay);
+}
+
 function renderTourStep() {
   const overlay = document.getElementById("tourOverlay");
   const card = document.getElementById("tourCard");
@@ -665,68 +743,25 @@ function renderTourStep() {
   const step = TOUR_STEPS[currentTourStep];
   if (!step) { endTour(); return; }
 
-  overlay.style.display = "block";
   labelEl.textContent = step.stepLabel || "";
   titleEl.textContent = step.title || "";
   bodyEl.textContent = step.body || "";
-  card.style.maxWidth = "360px";
-
-  // 默认先居中，避免闪一下
-  card.style.top = "50%";
-  card.style.left = "50%";
-  card.style.transform = "translate(-50%, -50%)";
-
-  if (step.type === "modal") {
-    // welcome直接使用居中
-  } else {
-    const target = document.getElementById(step.targetId);
-    if (!target) {
-      // fallback: 居中
-    } else {
-      // 平滑滚动到目标附近，再定位浮框
-      try {
-        target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      } catch(e) {
-        target.scrollIntoView();
-      }
-
-      // 等滚动一会再计算位置，避免“看上去消失”
-      setTimeout(() => {
-        const rect = target.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const cardWidth = 360;
-        const approxHeight = 190;
-
-        let top = rect.bottom + 12;
-        let left = rect.left;
-
-        if (left + cardWidth + 16 > viewportWidth) {
-          left = viewportWidth - cardWidth - 16;
-        }
-        if (left < 16) left = 16;
-
-        // 如果下面放不下，就放到目标上方
-        if (top + approxHeight > viewportHeight - 16) {
-          top = rect.top - approxHeight - 12;
-        }
-        if (top < 16) top = 16;
-
-        card.style.top = top + "px";
-        card.style.left = left + "px";
-        card.style.transform = "none";
-      }, 380);
-    }
-  }
 
   if (nextBtn) {
     nextBtn.textContent = (currentTourStep === TOUR_STEPS.length - 1) ? "Done" : "Next";
   }
+
+  placeTourCard(step, { skipScroll: false });
 }
 
 function endTour() {
   const overlay = document.getElementById("tourOverlay");
+  const card = document.getElementById("tourCard");
   if (overlay) overlay.style.display = "none";
+  if (card) {
+    card.style.opacity = "0";
+    card.style.pointerEvents = "none";
+  }
   try {
     localStorage.setItem(TOUR_KEY, "done");
   } catch(e){}
@@ -751,16 +786,18 @@ function maybeStartTourOnLoad() {
       startTour(0);
     }
   } catch(e){
-    // localStorage unavailable, 就当每次都跑一遍
+    // localStorage 不可用时，每次都跑一遍
     startTour(0);
   }
 }
 
-// 窗口尺寸变化 / 滚动时轻微调整位置，避免偏离
+// 窗口 resize 时只轻量 reposition，不再触发再次滚动，避免“卡顿感”
 window.addEventListener("resize", () => {
   const overlay = document.getElementById("tourOverlay");
   if (!overlay || overlay.style.display !== "block") return;
-  renderTourStep();
+  const step = TOUR_STEPS[currentTourStep];
+  if (!step) return;
+  placeTourCard(step, { skipScroll: true });
 });
 </script>
 
@@ -983,7 +1020,7 @@ const CREDIT_METRIC_PATTERNS = {
   "Debt - Current": [/current\s+debt/i, /short[-\s]?term\s+debt/i, /short[-\s]?term\s+borrowings/i],
   "Debt - Non-current": [/non[-\s]?current\s+debt/i, /long[-\s]?term\s+debt/i, /long[-\s]?term\s+borrowings/i],
   "Equity": [/total\s+equity/i, /shareholders'?\s+equity/i, /net\s+assets/i],
-  "Free cash flow": [/free\s*cash\s*flow/i, /\bFCF\b/i],
+  "Free cash flow": [/free\s*cash*s*flow/i, /\bFCF\b/i],
   "Cash Conv. Cycle (days)": [/cash conversion cycle/i],
   "Net debt / EBITDA (x)": [/net debt \/ EBITDA/i],
   "EBITDA / Interest (x)": [/EBITDA \/ interest/i],
