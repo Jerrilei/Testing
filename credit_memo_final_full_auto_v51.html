@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor v7.2</title>
+<title>Credit Memorandum — Final Editor v7.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -13,6 +13,7 @@
   --muted:#6b7280;
   --accent:#0b66c3;
   --danger:#ef4444;
+  --missing-ring:#facc15;
 }
 
 body{
@@ -37,85 +38,55 @@ body{
 }
 
 .section-title{
-  font-size:18px;
-  font-weight:700;
-  margin:4px 0 12px;
+  font-size:18px;font-weight:700;margin:4px 0 12px;
 }
 
 label{
-  font-size:13px;
-  color:var(--muted);
+  font-size:13px;color:var(--muted);
 }
 
 input,textarea,select{
-  width:100%;
-  padding:8px 10px;
-  margin-top:4px;
-  border-radius:8px;
-  border:1px solid #d1d5db;
-  font-size:14px;
-  background:#fff;
-  box-sizing:border-box;
+  width:100%;padding:8px 10px;margin-top:4px;
+  border-radius:8px;border:1px solid #d1d5db;
+  font-size:14px;background:#fff;box-sizing:border-box;
 }
 
-textarea{
-  min-height:80px;
-  resize:vertical;
+textarea{ min-height:80px; resize:vertical; }
+
+/* 之前的黄框样式保留但不再使用 */
+input.highlight,textarea.highlight{
+  border-color:var(--missing-ring);
+  box-shadow:0 0 0 1px var(--missing-ring);
 }
 
 .table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:8px;
-  font-size:14px;
+  width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;
 }
-
 .table th,.table td{
-  padding:8px;
-  border-bottom:1px solid #e5e7eb;
-  vertical-align:top;
+  padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top;
 }
-
 .table th{
-  font-weight:600;
-  text-align:left;
-  background:#f9fafb;
+  font-weight:600;text-align:left;background:#f9fafb;
 }
 
 .btn{
   background:var(--accent);
-  color:#fff;
-  padding:8px 18px;
-  border-radius:8px;
-  border:0;
-  cursor:pointer;
-  font-size:14px;
-  font-weight:600;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
+  color:#fff;padding:8px 18px;
+  border-radius:8px;border:0;cursor:pointer;
+  font-size:14px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;
 }
-
 .btn-outline{
-  background:transparent;
-  border:2px solid var(--accent);
-  color:var(--accent);
-  padding:7px 18px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:14px;
-  font-weight:600;
+  background:transparent;border:2px solid var(--accent);color:var(--accent);
+  padding:7px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;
 }
-
-.btn:disabled,.btn-outline:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+.btn:disabled, .btn-outline:disabled{
+  opacity:.5;cursor:not-allowed;
 }
 
 .header-row{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+  display:flex;flex-direction:column;
+  align-items:stretch;gap:8px;
 }
 
 .buyer-grid{
@@ -124,146 +95,127 @@ textarea{
   gap:18px;
 }
 
-.field{
-  display:flex;
-  flex-direction:column;
-}
+.field-col{ display:flex;flex-direction:column;gap:10px; }
+.field{ display:flex;flex-direction:column; }
+.note{ font-size:12px;color:var(--muted); }
+.small{ font-size:12px; }
 
-.note{
-  font-size:12px;
-  color:var(--muted);
+/* Buyer name 视觉强调 */
+.pill-primary{
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:rgba(11,102,195,0.08);
+  color:var(--accent);
+  font-weight:600;
 }
-
-.small{
-  font-size:12px;
-  color:var(--muted);
-}
-
-/* Buyer name 强提示 */
 #buyerLookup{
-  border:2px solid var(--accent);
-  box-shadow:0 0 0 3px rgba(11,102,195,0.15);
-}
-
-#buyerTip{
-  font-size:12px;
-  color:#0b66c3;
-  margin-top:4px;
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px rgba(11,102,195,0.20);
 }
 
 /* Obligor Ratings 3-column grid */
 .obligor-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;
 }
 
-/* Credit Parameters grid */
-.params-grid{
+/* Parameters 三列 grid */
+.param-grid{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px 18px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px 24px;
+  margin-top:4px;
 }
 
 /* Floating Chatbot */
 #chatFloatBtn{
-  position:fixed;
-  right:24px;
-  bottom:24px;
-  background:#0b66c3;
-  color:#fff;
-  width:54px;
-  height:54px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-  cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,0.25);
-  z-index:999;
+  position:fixed;right:24px;bottom:24px;
+  background:#0b66c3;color:#fff;
+  width:54px;height:54px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);z-index:999;
 }
-
 #chatPanel{
-  position:fixed;
-  right:24px;
-  bottom:90px;
-  width:320px;
-  background:#fff;
-  border-radius:12px;
+  position:fixed;right:24px;bottom:90px;width:320px;
+  background:#fff;border-radius:12px;
   box-shadow:0 8px 26px rgba(0,0,0,0.2);
-  padding:12px;
-  display:none;
-  z-index:998;
+  padding:12px;display:none;z-index:998;
 }
+#chatPanel textarea{ min-height:70px; }
 
-#chatPanel textarea{
-  min-height:70px;
-}
+/* Hide during PDF */
+.pdf-hide{ display:none !important; }
 
-/* PDF export hide */
-.pdf-hide{
-  display:none !important;
-}
-
-/* Spinner for Fetch Data */
-.spinner{
-  width:14px;
-  height:14px;
-  border:2px solid #fff;
-  border-top-color:transparent;
+/* V7.3 — fetch spinner */
+.spinner {
+  width: 14px;height:14px;
+  border:2px solid #fff;border-top-color:transparent;
   border-radius:50%;
   animation:spin 0.8s linear infinite;
 }
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
+@keyframes spin { 100%{ transform:rotate(360deg); } }
 
-/* Onboarding overlay */
-#onboardOverlay{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(2px);
-  display:none;
-  align-items:center;
-  justify-content:center;
+/* V7.3 — Onboarding coachmark (Style C: 轻量气泡 + 箭头) */
+.onboard-coachmark{
+  position:absolute;
+  max-width:260px;
+  background:#ffffff;
+  border-radius:10px;
+  padding:10px 12px 8px;
+  box-shadow:0 12px 30px rgba(15,23,42,0.28);
+  font-size:13px;
   z-index:1000;
 }
-
-#onboardBox{
-  background:#fff;
-  padding:24px;
-  border-radius:12px;
-  max-width:320px;
-  text-align:center;
-  box-shadow:0 8px 26px rgba(0,0,0,0.25);
+.onboard-coachmark::after{
+  content:"";
+  position:absolute;
+  width:10px;height:10px;
+  background:#ffffff;
+  transform:rotate(45deg);
+  box-shadow: -3px 3px 8px rgba(15,23,42,0.18);
+}
+.onboard-coachmark[data-arrow="top"]::after{
+  bottom:-5px;left:24px;
+}
+.onboard-coachmark[data-arrow="bottom"]::after{
+  top:-5px;left:24px;
+}
+.onboard-coachmark[data-arrow="left"]::after{
+  right:-5px;top:16px;
+}
+.onboard-coachmark[data-arrow="right"]::after{
+  left:-5px;top:16px;
 }
 
-#onboardBox h3{
-  margin:0 0 8px;
-  font-size:18px;
-  font-weight:700;
+.onboard-coachmark-title{
+  font-weight:600;
+  margin-bottom:4px;
+  color:#111827;
 }
-
-#onboardBox p{
-  margin:0;
-  font-size:14px;
-  color:#555;
+.onboard-coachmark-body{
+  margin-bottom:8px;
+  color:#374151;
 }
-
-#onboardClose{
-  margin-top:14px;
-  padding:6px 14px;
-  background:var(--accent);
-  border-radius:6px;
-  color:#fff;
-  font-size:14px;
+.onboard-coachmark-footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+}
+.onboard-btn{
+  border-radius:999px;
+  border:0;
+  padding:4px 10px;
+  font-size:11px;
   cursor:pointer;
-  border:none;
+}
+.onboard-btn-primary{
+  background:var(--accent);
+  color:#fff;
+}
+.onboard-btn-ghost{
+  background:transparent;
+  color:#6b7280;
 }
 </style>
 </head>
@@ -271,7 +223,10 @@ textarea{
 
 <div class="container">
 
-<!-- HEADER -->
+<!-- ========================= -->
+<!-- V7.3 HEADER BLOCK -->
+<!-- ========================= -->
+
 <div class="card">
   <div class="header-row">
 
@@ -289,25 +244,29 @@ textarea{
     <!-- Row 2: Subtitle + Export -->
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div class="note">
-        Template aligned to PDF memo.
+        Template aligned to PDF memo. Start with buyer name → Fetch Data, then refine and export.
       </div>
+
       <button class="btn-outline" onclick="exportPDF()">Export PDF</button>
     </div>
 
-  </div><!-- /header-row -->
+  </div> <!-- /header-row -->
 
   <!-- Buyer lookup row -->
   <div style="display:flex;gap:12px;margin-top:14px;align-items:flex-end">
     <div style="flex:1">
-      <label>Buyer name</label>
-      <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
-      <div id="buyerTip">Step 1: Enter buyer legal name · Step 2: Click “Fetch Data” to auto-populate the memo.</div>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <span>Buyer name</span>
+        <span class="pill-primary">Start here</span>
+      </label>
+      <input id="buyerLookup" placeholder="Type buyer name (e.g. PDD Holdings, Walmart)" />
     </div>
+
     <button class="btn" id="refreshBuyer">Fetch Data</button>
   </div>
 
   <div style="margin-top:16px" class="section-title">Executive Summary</div>
-  <textarea id="execSummary"></textarea>
+  <textarea id="execSummary" data-required="1"></textarea>
 
   <div style="margin-top:12px" class="section-title">Key Highlights</div>
   <textarea id="highlights"></textarea>
@@ -318,61 +277,67 @@ textarea{
   <div class="section-title">Buyer Information</div>
   <div class="buyer-grid">
     <!-- Column 1 -->
-    <div class="field">
-      <label>Borrower / Obligor</label>
-      <input id="companyName" />
-    </div>
-    <div class="field">
-      <label>Group / Parent Legal Name</label>
-      <input id="groupParentName" />
-    </div>
-    <div class="field">
-      <label>Obligor Legal Name</label>
-      <input id="obligorLegalName" />
-    </div>
-    <div class="field">
-      <label>Country</label>
-      <input id="country" />
-    </div>
-    <div class="field">
-      <label>Country of Incorporation</label>
-      <input id="countryOfIncorp" />
+    <div class="field-col">
+      <div class="field">
+        <label>Borrower / Obligor *</label>
+        <input id="companyName" data-required="1" />
+      </div>
+      <div class="field">
+        <label>Group / Parent Legal Name</label>
+        <input id="groupParentName" />
+      </div>
+      <div class="field">
+        <label>Obligor Legal Name</label>
+        <input id="obligorLegalName" />
+      </div>
+      <div class="field">
+        <label>Country</label>
+        <input id="country" />
+      </div>
+      <div class="field">
+        <label>Country of Incorporation</label>
+        <input id="countryOfIncorp" />
+      </div>
     </div>
 
     <!-- Column 2 -->
-    <div class="field">
-      <label>Business description</label>
-      <textarea id="business"></textarea>
-    </div>
-    <div class="field">
-      <label>Business activities</label>
-      <textarea id="coreBusinessActivities"></textarea>
-    </div>
-    <div class="field">
-      <label>Key Customers</label>
-      <textarea id="coreBusinessCustomers"></textarea>
-    </div>
-    <div class="field">
-      <label>Website</label>
-      <input id="coreBusinessWebsite" />
+    <div class="field-col">
+      <div class="field">
+        <label>Business description</label>
+        <textarea id="business"></textarea>
+      </div>
+      <div class="field">
+        <label>Business activities</label>
+        <textarea id="coreBusinessActivities"></textarea>
+      </div>
+      <div class="field">
+        <label>Key Customers</label>
+        <textarea id="coreBusinessCustomers"></textarea>
+      </div>
+      <div class="field">
+        <label>Website</label>
+        <input id="coreBusinessWebsite" />
+      </div>
     </div>
 
     <!-- Column 3 -->
-    <div class="field">
-      <label>Market Cap</label>
-      <input id="marketCap" />
-    </div>
-    <div class="field">
-      <label>External credit rating</label>
-      <input id="externalRating" />
-    </div>
-    <div class="field">
-      <label>Internal Rating (Current)</label>
-      <input id="internalRatingCurrent" />
-    </div>
-    <div class="field">
-      <label>Internal Rating (Proposed)</label>
-      <input id="internalRatingProposed" />
+    <div class="field-col">
+      <div class="field">
+        <label>Market Cap</label>
+        <input id="marketCap" />
+      </div>
+      <div class="field">
+        <label>External credit rating</label>
+        <input id="externalRating" />
+      </div>
+      <div class="field">
+        <label>Internal Rating (Current)</label>
+        <input id="internalRatingCurrent" />
+      </div>
+      <div class="field">
+        <label>Internal Rating (Proposed)</label>
+        <input id="internalRatingProposed" />
+      </div>
     </div>
   </div>
 </div>
@@ -382,14 +347,7 @@ textarea{
   <div class="section-title">Financial Highlights (Summary)</div>
   <table class="table" id="summaryFinTbl">
     <thead>
-      <tr>
-        <th>Metric</th>
-        <th>2022</th>
-        <th>2023</th>
-        <th>2024</th>
-        <th>23 vs 22</th>
-        <th>24 vs 23</th>
-      </tr>
+      <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>23 vs 22</th><th>24 vs 23</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -398,8 +356,6 @@ textarea{
 <!-- CREDIT LIMITS -->
 <div class="card">
   <div class="section-title">Credit Limits</div>
-
-  <!-- A. Limits -->
   <table class="table">
     <thead>
       <tr>
@@ -412,81 +368,84 @@ textarea{
     <tbody>
       <tr>
         <th>Secured</th>
-        <td><input id="limSecExisting" /></td>
-        <td><input id="limSecUtil" /></td>
-        <td><input id="limSecProp" /></td>
+        <td><input id="limSecExisting" data-required="1" /></td>
+        <td><input id="limSecUtil" data-required="1" /></td>
+        <td><input id="limSecProp" data-required="1" /></td>
       </tr>
       <tr>
         <th>Residual</th>
-        <td><input id="limResExisting" /></td>
-        <td><input id="limResUtil" /></td>
-        <td><input id="limResProp" /></td>
+        <td><input id="limResExisting" data-required="1" /></td>
+        <td><input id="limResUtil" data-required="1" /></td>
+        <td><input id="limResProp" data-required="1" /></td>
       </tr>
       <tr>
         <th>Clean</th>
-        <td><input id="limCleanExisting" /></td>
-        <td><input id="limCleanUtil" /></td>
-        <td><input id="limCleanProp" /></td>
+        <td><input id="limCleanExisting" data-required="1" /></td>
+        <td><input id="limCleanUtil" data-required="1" /></td>
+        <td><input id="limCleanProp" data-required="1" /></td>
       </tr>
       <tr>
         <th>Total</th>
-        <td><input id="limTotExisting" /></td>
-        <td><input id="limTotUtil" /></td>
-        <td><input id="limTotProp" /></td>
+        <td><input id="limTotExisting" data-required="1" /></td>
+        <td><input id="limTotUtil" data-required="1" /></td>
+        <td><input id="limTotProp" data-required="1" /></td>
       </tr>
     </tbody>
   </table>
 
-  <!-- B. Parameters (合并 Insurer + Financing Terms) -->
-  <div class="section-title" style="font-size:16px;margin-top:16px;">Parameters</div>
-  <div class="params-grid">
+  <!-- PARAMETERS: 3-column grid -->
+  <div class="section-title" style="margin-top:18px;">Parameters</div>
+  <div class="param-grid">
     <div class="field">
       <label>Insurer</label>
-      <input id="insurer" />
+      <input id="insurer" data-required="1" />
     </div>
     <div class="field">
       <label>Credit Insurance Limit</label>
-      <input id="creditInsLimit" />
+      <input id="creditInsLimit" data-required="1" />
     </div>
     <div class="field">
       <label>Advance Rate</label>
-      <input id="advanceRate" />
+      <input id="advanceRate" data-required="1" />
     </div>
+
     <div class="field">
       <label>TCS Rate</label>
-      <input id="tcsRate" />
+      <input id="tcsRate" data-required="1" />
     </div>
     <div class="field">
       <label>Past 12 mth GMV</label>
-      <input id="gmvPast12" />
+      <input id="gmvPast12" data-required="1" />
     </div>
     <div class="field">
       <label>Forecast 12 mth GMV</label>
-      <input id="gmvForecast12" />
+      <input id="gmvForecast12" data-required="1" />
     </div>
+
     <div class="field">
       <label>Financing term</label>
-      <input id="financingTerm" />
+      <input id="financingTerm" data-required="1" />
     </div>
     <div class="field">
       <label>Supplier Credit Days</label>
-      <input id="supplierCreditDays" />
+      <input id="supplierCreditDays" data-required="1" />
     </div>
     <div class="field">
       <label>Payment History / Delay Days</label>
-      <input id="paymentHistory" />
+      <input id="paymentHistory" data-required="1" />
     </div>
+
     <div class="field">
       <label>Dilution rate</label>
-      <input id="dilutionRate" />
+      <input id="dilutionRate" data-required="1" />
     </div>
     <div class="field">
       <label>Peak / Average WC</label>
-      <input id="peakAvgWc" />
+      <input id="peakAvgWc" data-required="1" />
     </div>
     <div class="field">
       <label>LF Customer Since</label>
-      <input id="customerSince" />
+      <input id="customerSince" data-required="1" />
     </div>
   </div>
 </div>
@@ -496,7 +455,8 @@ textarea{
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
     <div style="display:flex;gap:10px;">
-      <button class="btn" id="refreshAnalysisBtn" onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
+      <button class="btn" id="refreshAnalysisBtn"
+        onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
     </div>
   </div>
 
@@ -520,7 +480,7 @@ textarea{
 <div class="card">
   <div class="section-title">Automated Financial Analysis</div>
   <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
-  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the auto-fill.</div>
+  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the auto-fill or refresh.</div>
 </div>
 
 <!-- SOURCES -->
@@ -536,19 +496,13 @@ textarea{
 <div class="card">
   <div class="section-title">Liquidity Metrics</div>
   <table class="table">
-    <tr>
-      <th>Metric</th>
-      <th>2022</th>
-      <th>2023</th>
-      <th>2024</th>
-      <th>Notes</th>
-    </tr>
+    <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>Notes</th></tr>
     <tr>
       <td>Liquidity headroom</td>
-      <td><input id="liq22" /></td>
-      <td><input id="liq23" /></td>
-      <td><input id="liq24" /></td>
-      <td><textarea id="liqNotes"></textarea></td>
+      <td><input id="liq22" data-required="1" /></td>
+      <td><input id="liq23" data-required="1" /></td>
+      <td><input id="liq24" data-required="1" /></td>
+      <td><textarea id="liqNotes" data-required="1"></textarea></td>
     </tr>
   </table>
 </div>
@@ -559,15 +513,15 @@ textarea{
   <div class="obligor-grid">
     <div class="field">
       <label>Internal Score</label>
-      <input id="intScore" />
+      <input id="intScore" data-required="1" />
     </div>
     <div class="field">
       <label>External Rating</label>
-      <input id="extRating2" />
+      <input id="extRating2" data-required="1" />
     </div>
     <div class="field">
       <label>Rationale</label>
-      <textarea id="ratingRationale"></textarea>
+      <textarea id="ratingRationale" data-required="1"></textarea>
     </div>
   </div>
 </div>
@@ -575,13 +529,13 @@ textarea{
 <!-- RECOMMENDATION -->
 <div class="card">
   <div class="section-title">Recommendation & Action Plan</div>
-  <textarea id="recommend"></textarea>
+  <textarea id="recommend" data-required="1"></textarea>
 </div>
 
 <!-- RISKS -->
 <div class="card">
   <div class="section-title">Key Risks & Mitigants</div>
-  <textarea id="risks"></textarea>
+  <textarea id="risks" data-required="1"></textarea>
 </div>
 
 </div><!-- /container -->
@@ -596,32 +550,21 @@ textarea{
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
-<!-- Onboarding Overlay -->
-<div id="onboardOverlay">
-  <div id="onboardBox">
-    <h3>Start with the buyer name</h3>
-    <p>Step 1: Enter the buyer's legal name in the <b>Buyer name</b> field.</p>
-    <p>Step 2: Click <b>Fetch Data</b> to pull financials and analysis.</p>
-    <button id="onboardClose">Got it</button>
-  </div>
-</div>
-
 <!-- PDF EXPORT LIBS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// ===== Export PDF (v7.2) =====
+// ===== V7.3 Export PDF (container only + hide overlays) =====
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
 
   const chatBtn = document.getElementById("chatFloatBtn");
   const chatPanel = document.getElementById("chatPanel");
-  const overlay = document.getElementById("onboardOverlay");
-
+  const coach = document.getElementById("onboardCoachmark");
   if (chatBtn) chatBtn.classList.add("pdf-hide");
   if (chatPanel) chatPanel.classList.add("pdf-hide");
-  if (overlay) overlay.classList.add("pdf-hide");
+  if (coach) coach.classList.add("pdf-hide");
 
   const container = document.querySelector(".container");
 
@@ -632,7 +575,9 @@ async function exportPDF() {
     let text = "";
     if (el.tagName === "SELECT") {
       const sel = el;
-      if (sel.selectedIndex >= 0) text = sel.options[sel.selectedIndex].text;
+      if (sel.selectedIndex >= 0) {
+        text = sel.options[sel.selectedIndex].text;
+      }
     } else {
       text = el.value || "";
     }
@@ -670,6 +615,7 @@ async function exportPDF() {
 
   const imgWidthPx = imgProps.width;
   const imgHeightPx = imgProps.height;
+
   const imgHeightMm = (imgHeightPx * usableWidth) / imgWidthPx;
 
   let heightLeft = imgHeightMm;
@@ -687,7 +633,6 @@ async function exportPDF() {
 
   pdf.save("credit_memo.pdf");
 
-  // 恢复控件
   replacements.forEach(({ el, span, origDisplay }) => {
     if (span && span.parentNode) span.parentNode.removeChild(span);
     el.style.display = origDisplay || "";
@@ -695,12 +640,12 @@ async function exportPDF() {
 
   if (chatBtn) chatBtn.classList.remove("pdf-hide");
   if (chatPanel) chatPanel.classList.remove("pdf-hide");
-  if (overlay) overlay.classList.remove("pdf-hide");
+  if (coach) coach.classList.remove("pdf-hide");
 }
 </script>
 
 <script>
-// ===== 原有 JS（适配 v7.2） =====
+// ===== 原始 JS（保留 + V7.3 微调） =====
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s)"]+)/g;
   return text.replace(urlRegex, url => {
@@ -708,6 +653,7 @@ function linkify(text) {
   });
 }
 
+// Utility helpers
 const WORKER_URL = "https://credit-memo-proxy.jerrizhou.workers.dev";
 
 function extractContentFromResponses(data) {
@@ -1034,18 +980,11 @@ function applyCreditMetricsFromFull(fullRows) {
   });
 }
 
-// Demo prefill 保留占位
-function prefillPDD(){}
-
-// Auto Fetch via Worker with overlay 引导
+// Auto Fetch via Worker (V7.3: spinner text)
 async function autoFetchBuyer() {
   const buyer = (safeVal('buyerLookup') || '').trim();
-  const overlay = document.getElementById('onboardOverlay');
-
   if (!buyer) {
-    if (overlay) overlay.style.display = 'flex';
-    const inp = document.getElementById('buyerLookup');
-    if (inp) inp.focus();
+    alert('Please enter buyer name first');
     return;
   }
 
@@ -1096,9 +1035,9 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
 
   try {
     const res = await fetch(WORKER_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
@@ -1251,6 +1190,7 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
   }
 }
 
+// Refresh analysis from tables (V7.3: 按钮 loading)
 async function refreshAnalysisFromTables() {
   recomputeYoYFromTables();
 
@@ -1342,9 +1282,9 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
 
   try {
     const res = await fetch(WORKER_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     console.log('Refresh analysis response:', data);
@@ -1381,8 +1321,167 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
   }
 }
 
+/* ========== V7.3 Onboarding（Style C 气泡引导） ========== */
+const ONBOARD_KEY = "credit_memo_onboard_v73";
+
+const ONBOARD_STEPS = [
+  {
+    id: "buyer",
+    target: "#buyerLookup",
+    title: "Step 1 — Start with buyer name",
+    text: "Type the obligor / buyer name here. The assistant will use this to locate filings and build the memo.",
+    placement: "bottom-right",
+    arrow: "top"
+  },
+  {
+    id: "fetch",
+    target: "#refreshBuyer",
+    title: "Step 2 — Fetch data",
+    text: "Click “Fetch Data” to pull financials, narrative and tables directly from public filings.",
+    placement: "bottom-left",
+    arrow: "top"
+  },
+  {
+    id: "refresh",
+    target: "#refreshAnalysisBtn",
+    title: "Step 3 — Update analysis",
+    text: "After you tweak the numbers, hit “Refresh Analysis” to regenerate the financial commentary.",
+    placement: "top-left",
+    arrow: "bottom"
+  }
+];
+
+function createCoachmark() {
+  let node = document.getElementById("onboardCoachmark");
+  if (node) return node;
+  node = document.createElement("div");
+  node.id = "onboardCoachmark";
+  node.className = "onboard-coachmark";
+  node.innerHTML = `
+    <div class="onboard-coachmark-title"></div>
+    <div class="onboard-coachmark-body"></div>
+    <div class="onboard-coachmark-footer">
+      <button class="onboard-btn onboard-btn-ghost" data-role="skip">Skip</button>
+      <button class="onboard-btn onboard-btn-primary" data-role="next">Next</button>
+    </div>
+  `;
+  document.body.appendChild(node);
+  return node;
+}
+
+function positionCoachmark(step) {
+  const target = document.querySelector(step.target);
+  if (!target) return null;
+  const rect = target.getBoundingClientRect();
+  const coach = createCoachmark();
+  const scrollY = window.scrollY || document.documentElement.scrollTop;
+  const scrollX = window.scrollX || document.documentElement.scrollLeft;
+
+  let top = 0, left = 0;
+
+  switch (step.placement) {
+    case "bottom-right":
+      top = rect.bottom + 10 + scrollY;
+      left = rect.left + scrollX;
+      coach.dataset.arrow = step.arrow || "top";
+      break;
+    case "bottom-left":
+      top = rect.bottom + 10 + scrollY;
+      left = rect.right - 260 + scrollX;
+      coach.dataset.arrow = step.arrow || "top";
+      break;
+    case "top-left":
+      top = rect.top + scrollY - 90;
+      left = rect.right - 260 + scrollX;
+      coach.dataset.arrow = step.arrow || "bottom";
+      break;
+    default:
+      top = rect.bottom + 10 + scrollY;
+      left = rect.left + scrollX;
+      coach.dataset.arrow = step.arrow || "top";
+  }
+
+  coach.style.top = Math.max(top, scrollY + 10) + "px";
+  coach.style.left = Math.max(left, scrollX + 10) + "px";
+
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  return coach;
+}
+
+function startOnboarding(force) {
+  try {
+    if (!force && window.localStorage && localStorage.getItem(ONBOARD_KEY) === "done") {
+      return;
+    }
+  } catch(e) {}
+
+  let index = 0;
+  const coach = createCoachmark();
+
+  function showStep(i) {
+    if (i < 0 || i >= ONBOARD_STEPS.length) {
+      finish();
+      return;
+    }
+    index = i;
+    const step = ONBOARD_STEPS[index];
+    const placed = positionCoachmark(step);
+    if (!placed) {
+      finish();
+      return;
+    }
+    placed.querySelector(".onboard-coachmark-title").textContent = step.title;
+    placed.querySelector(".onboard-coachmark-body").textContent = step.text;
+
+    const nextBtn = placed.querySelector('[data-role="next"]');
+    if (index === ONBOARD_STEPS.length - 1) {
+      nextBtn.textContent = "Done";
+    } else {
+      nextBtn.textContent = "Next";
+    }
+  }
+
+  function finish(skip) {
+    if (!skip) {
+      try {
+        if (window.localStorage) localStorage.setItem(ONBOARD_KEY, "done");
+      } catch(e){}
+    }
+    const node = document.getElementById("onboardCoachmark");
+    if (node && node.parentNode) node.parentNode.removeChild(node);
+    window.removeEventListener("resize", handleReposition);
+    window.removeEventListener("scroll", handleReposition);
+  }
+
+  function handleReposition() {
+    positionCoachmark(ONBOARD_STEPS[index]);
+  }
+
+  showStep(0);
+
+  const nextHandler = (ev) => {
+    if (ev.target && ev.target.dataset && ev.target.dataset.role === "next") {
+      if (index === ONBOARD_STEPS.length - 1) finish(false);
+      else showStep(index + 1);
+    }
+    if (ev.target && ev.target.dataset && ev.target.dataset.role === "skip") {
+      finish(true);
+    }
+  };
+
+  coach.addEventListener("click", nextHandler);
+  window.addEventListener("resize", handleReposition);
+  window.addEventListener("scroll", handleReposition);
+}
+
+// DOM Ready: wire up
 document.addEventListener('DOMContentLoaded', () => {
   buildCreditMetricsTable();
+
+  // V7.3: 不再统一黄框高亮，只清理旧 class
+  const requiredEls = document.querySelectorAll('[data-required="1"]');
+  requiredEls.forEach(el => el.classList.remove('highlight'));
 
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
@@ -1443,12 +1542,14 @@ Keep answers concise but technically sound, suitable for an investment committee
 
     try {
       const res = await fetch(WORKER_URL, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(payload)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error("HTTP " + res.status);
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
 
       const data = await res.json();
       const content = extractContentFromResponses(data);
@@ -1459,8 +1560,8 @@ Keep answers concise but technically sound, suitable for an investment committee
       }
 
       chatHistory.push(
-        { role:"user", content:q },
-        { role:"assistant", content }
+        { role: "user", content: q },
+        { role: "assistant", content }
       );
 
       aBox.innerHTML = content
@@ -1480,38 +1581,26 @@ Keep answers concise but technically sound, suitable for an investment committee
     askBtn.addEventListener('click', () => { runChat(); });
   }
 
-  // Bind Fetch Data button
   const fetchBtn = document.getElementById('refreshBuyer');
-  if (fetchBtn && !fetchBtn._bound) {
+  if (fetchBtn && !fetchBtn._v68Bound) {
     fetchBtn.addEventListener('click', autoFetchBuyer);
-    fetchBtn._bound = true;
+    fetchBtn._v68Bound = true;
   }
 
-  // Onboarding overlay close
-  const overlay = document.getElementById('onboardOverlay');
-  const overlayClose = document.getElementById('onboardClose');
-  if (overlay && overlayClose) {
-    overlayClose.addEventListener('click', () => {
-      overlay.style.display = 'none';
-      const inp = document.getElementById('buyerLookup');
-      if (inp) inp.focus();
-    });
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.style.display = 'none';
-      }
-    });
-  }
+  // 启动 Onboarding（只在第一次）
+  startOnboarding(false);
 });
+</script>
 
-// safety re-bind
+<script>
+// safety re-bind for Fetch Data button
 (function(){
   function bindFetch() {
     try {
       var btn = document.getElementById('refreshBuyer');
-      if (btn && !btn._bound) {
+      if (btn && !btn._v68Bound) {
         btn.addEventListener('click', autoFetchBuyer);
-        btn._bound = true;
+        btn._v68Bound = true;
         console.log("autoFetchBuyer bound (safety helper)");
       }
     } catch (e) {
