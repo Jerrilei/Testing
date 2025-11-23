@@ -665,6 +665,7 @@ function placeTourCard(step, opts = {}) {
 
   overlay.style.display = "block";
 
+  // ============ MODAL STEP (Step 0) ============
   if (step.type === "modal" || !step.targetId) {
     card.style.position = "fixed";
     card.style.top = "50%";
@@ -672,10 +673,10 @@ function placeTourCard(step, opts = {}) {
     card.style.transform = "translate(-50%, -50%)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
-    console.log("TourCard placed modal center");
     return;
   }
 
+  // ============ ANCHOR STEPS ============
   const target = document.getElementById(step.targetId);
   if (!target) {
     card.style.position = "fixed";
@@ -684,7 +685,6 @@ function placeTourCard(step, opts = {}) {
     card.style.transform = "translate(-50%, -50%)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
-    console.log("TourCard fallback center – target missing:", step.targetId);
     return;
   }
 
@@ -699,7 +699,6 @@ function placeTourCard(step, opts = {}) {
     }
   }
 
-  const delay = skipScroll ? 60 : 260;
   setTimeout(() => {
     const rect = target.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -707,60 +706,49 @@ function placeTourCard(step, opts = {}) {
     const cardWidth = 360;
     const cardHeight = 200;
 
-    let left, top;
+    let left = rect.left;
+    let top = rect.bottom + 12;
 
+    // ============ SPECIAL CASE: STEP 3 (Refresh Analysis Button) ============
     if (step.id === 3) {
 
-  // 获取按钮真实位置
-  const btnRect = target.getBoundingClientRect();
+      const btnRect = rect;
+      const btnCenter = btnRect.left + btnRect.width / 2;
 
-  const btnCenter = btnRect.left + btnRect.width / 2;
+      left = btnCenter - cardWidth / 2;
+      top = btnRect.bottom + 12;
 
-  // 卡片宽度
-  const cardWidth = 360;
+      if (left < 20) left = 20;
+      if (left + cardWidth > viewportWidth - 20) {
+        left = viewportWidth - cardWidth - 20;
+      }
 
-  // 居中放置卡片
-  left = btnCenter - cardWidth / 2;
+      if (top + cardHeight > viewportHeight - 20) {
+        top = btnRect.top - cardHeight - 12;
+      }
+    }
 
-  // 放在按钮下方 12px
-  top = btnRect.bottom + 12;
-
-  // 边界保护
-  if (left < 20) left = 20;
-  if (left + cardWidth > viewportWidth - 20) {
-    left = viewportWidth - cardWidth - 20;
-  }
-
-  // 如果按钮太下方 → 卡片显示在按钮上方
-  if (top + cardHeight > viewportHeight - 20) {
-    top = btnRect.top - cardHeight - 12;
-  }
-
-  console.log("Step3 center-aligned. final:", left, top);
-}
-    } else {
-      left = rect.left;
-      top = rect.bottom + 12;
-
+    // ============ DEFAULT POSITIONING FOR OTHER STEPS ============
+    else {
       if (left + cardWidth > viewportWidth - 20) {
         left = viewportWidth - cardWidth - 20;
       }
       if (left < 20) left = 20;
+
       if (top + cardHeight > viewportHeight - 20) {
         top = rect.top - cardHeight - 12;
       }
       if (top < 20) top = 20;
     }
 
+    // Finalize placement
     card.style.position = "fixed";
     card.style.top = top + "px";
     card.style.left = left + "px";
     card.style.transform = "translateY(0)";
     card.style.opacity = "1";
     card.style.pointerEvents = "auto";
-
-    console.log("TourCard placed final left/top:", left, top);
-  }, delay);
+  }, skipScroll ? 100 : 300);
 }
 
 function renderTourStep() {
