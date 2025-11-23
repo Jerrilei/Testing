@@ -61,7 +61,8 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       <label>Buyer name</label>
       <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
     </div>
-    <button class="btn" id="refreshBuyer">Fetch Data</button>
+    <!-- 这里加了 onclick，确保一定触发 autoFetchBuyer -->
+    <button class="btn" id="refreshBuyer" onclick="autoFetchBuyer()">Fetch Data</button>
     <button class="btn-outline" id="prefillWalmartBtn">Demo (PDD)</button>
   </div>
 
@@ -223,10 +224,18 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
 
 <!-- FULL FINANCIALS -->
 <div class="card">
-  <div class="section-title">Financial Highlights (Full)</div>
+  <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
   <table class="table" id="finTableFull">
     <thead>
-      <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>23 vs 22</th><th>24 vs 23</th><th>Latest Quarter</th></tr>
+      <tr>
+        <th>Metric</th>
+        <th>2022</th>
+        <th>2023</th>
+        <th>2024</th>
+        <th>23 vs 22</th>
+        <th>24 vs 23</th>
+        <th>Latest Quarter</th>
+      </tr>
     </thead>
     <tbody id="finBody"></tbody>
   </table>
@@ -237,6 +246,16 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
   <div class="section-title">Automated Financial Analysis</div>
   <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
   <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the demo prefill.</div>
+</div>
+
+
+<!-- SOURCES -->
+<div class="card">
+  <div class="section-title">Key Sources (non-editable)</div>
+  <div id="sourcesBox" style="font-size:13px;line-height:1.5;color:#374151">
+    <div class="note">Populated automatically from the financial analysis. Not editable.</div>
+    <ul id="sourcesList" style="padding-left:18px;margin-top:8px"></ul>
+  </div>
 </div>
 
 <!-- LIQUIDITY -->
@@ -298,21 +317,83 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
 </div>
 
 <script>
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s)"]+)/g;
+  return text.replace(urlRegex, url => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+}
+
 // ===== Utility helpers =====
 const WORKER_URL = "https://credit-memo-proxy.jerrizhou.workers.dev";
 
+// Unified helper to extract text content from both Responses API and legacy Chat Completions
+function extractContentFromResponses(data) {
+  if (!data) return "";
+  // New Responses API: convenience field
+  if (typeof data.output_text === "string" && data.output_text.trim()) {
+    return data.output_text;
+  }
+  // Fallback: look into output array (Responses API structured form)
+  if (Array.isArray(data.output)) {
+    for (const item of data.output) {
+      if (item && item.type === "message" && Array.isArray(item.content)) {
+        return item.content.map(part => {
+          if (!part) return "";
+          if (typeof part.text === "string") return part.text;
+          if (part.type === "output_text" && typeof part.output_text === "string") return part.output_text;
+          return "";
+        }).join("");
+      }
+      if (item && typeof item.content === "string") {
+        return item.content;
+      }
+    }
+  }
+  // Legacy Chat Completions shape
+  if (data.choices && data.choices[0] && data.choices[0].message && typeof data.choices[0].message.content === "string") {
+    return data.choices[0].message.content;
+  }
+  return "";
+}
+
 function toNum(x) {
   if (x === null || x === undefined) return null;
-  const cleaned = String(x).replace(/,/g, "").trim();
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : null;
+  let s = String(x).trim();
+  if (!s) return null;
+
+  // Normalise: remove commas
+  s = s.replace(/,/g, '').trim();
+
+  // Remove common currency symbols / codes
+  s = s.replace(/(USD|US\$|RMB|CNY|HKD|HK\$|EUR|EUR\$|GBP|£|€|¥|\$)/gi, '').trim();
+
+  let multiplier = 1; // treat numbers as "millions"
+
+  // Detect textual units: billion / million / thousand, incl. bn/m/k abbreviations
+  const unitMatch = s.match(/(billion|bn|million|mn|m|thousand|k)/i);
+  if (unitMatch) {
+    const u = unitMatch[1].toLowerCase();
+    if (u === 'billion' || u === 'bn') {
+      multiplier = 1000; // 1 billion = 1000 million
+    } else if (u === 'million' || u === 'mn' || u === 'm') {
+      multiplier = 1;
+    } else if (u === 'thousand' || u === 'k') {
+      multiplier = 0.001; // 1000 = 0.001 million
+    }
+    s = s.replace(unitMatch[0], '').trim();
+  }
+
+  if (!s) return null;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return null;
+  return n * multiplier;
 }
 
 function safeVal(id) {
   var el = document.getElementById(id);
   return el && typeof el.value === 'string' ? el.value : '';
 }
-
 
 const REQUIRED_SUMMARY_METRICS = [
   "Revenue (RMB m)",
@@ -382,19 +463,210 @@ function recomputeYoYFromTables() {
     }
   });
 
-  // Full
+  // Full (credit metrics table – use editable inputs)
   const fullRows = document.querySelectorAll('#finBody tr');
   fullRows.forEach(tr => {
     const tds = tr.querySelectorAll('td');
     if (tds.length >= 7) {
-      const y22 = toNum(tds[1].textContent);
-      const y23 = toNum(tds[2].textContent);
-      const y24 = toNum(tds[3].textContent);
+      const y22Input = tds[1].querySelector('input');
+      const y23Input = tds[2].querySelector('input');
+      const y24Input = tds[3].querySelector('input');
+      const y22 = toNum(y22Input && y22Input.value);
+      const y23 = toNum(y23Input && y23Input.value);
+      const y24 = toNum(y24Input && y24Input.value);
       let yoy23 = '-', yoy24 = '-';
-      if (y22 && y23) yoy23 = ((y23 - y22) / y22 * 100).toFixed(1) + '%';
-      if (y23 && y24) yoy24 = ((y24 - y23) / y23 * 100).toFixed(1) + '%';
+      if (y22 != null && y23 != null && y22 !== 0) yoy23 = ((y23 - y22) / y22 * 100).toFixed(1) + '%';
+      if (y23 != null && y24 != null && y23 !== 0) yoy24 = ((y24 - y23) / y23 * 100).toFixed(1) + '%';
       tds[4].textContent = yoy23;
       tds[5].textContent = yoy24;
+    }
+  });
+}
+
+function populateSourcesFromAnalysis() {
+  const listEl = document.getElementById('sourcesList');
+  const box = document.getElementById('analysisBox');
+  if (!listEl || !box) return;
+  const html = box.innerHTML || '';
+  // Extract patterns like (Source: xxx) or Source: xxx
+  const regex = /(Source:\s*[^)<\n]+|\(Source:\s*[^)]+\))/gi;
+  const seen = new Set();
+  const items = [];
+  let m;
+  while ((m = regex.exec(html)) !== null) {
+    let raw = m[0];
+    raw = raw.replace(/^\(/, '').replace(/\)$/, '');
+    const parts = raw.split(/Source:\s*/i);
+    const text = (parts[1] || parts[0] || '').trim();
+    if (!text || seen.has(text.toLowerCase())) continue;
+    seen.add(text.toLowerCase());
+    const q = encodeURIComponent(text);
+    const url = "https://www.google.com/search?q=" + q;
+    items.push({ label: text, url });
+  }
+  listEl.innerHTML = '';
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.textContent = 'No explicit sources detected in the analysis text.';
+    listEl.appendChild(li);
+    return;
+  }
+  items.forEach(it => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = it.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = it.label;
+    li.appendChild(a);
+    listEl.appendChild(li);
+  });
+}
+
+// ---- Credit metrics configuration ----
+const CREDIT_METRICS_ORDER = [
+  "Turnover",
+  "GP",
+  "GP%",
+  "EBITDA",
+  "EBITDA margin %",
+  "Net profit",
+  "Net Profit %",
+  "Cash & Bank",
+  "Inventory",
+  "Debt - Current",
+  "Debt - Non-current",
+  "Equity",
+  "Free cash flow",
+  "Cash Conv. Cycle (days)",
+  "Net debt / EBITDA (x)",
+  "EBITDA / Interest (x)",
+  "Current ratio (x)"
+];
+
+const CREDIT_METRIC_PATTERNS = {
+  "Turnover": [/turnover/i, /total revenue/i, /revenue/i, /net sales/i],
+  "GP": [/gross\s*profit/i, /\bGP\b/i],
+  "EBITDA": [/\bEBITDA\b/i, /operating\s*income/i, /operating\s*profit/i],
+  "Net profit": [/net\s*income/i, /net\s*profit/i, /profit attributable/i],
+  "Cash & Bank": [/cash/i, /cash & equivalents/i, /cash & cash equivalents/i, /bank\b/i],
+  "Inventory": [/inventory/i, /inventories/i],
+  "Debt - Current": [/current\s+debt/i, /short[-\s]?term\s+debt/i, /short[-\s]?term\s+borrowings/i],
+  "Debt - Non-current": [/non[-\s]?current\s+debt/i, /long[-\s]?term\s+debt/i, /long[-\s]?term\s+borrowings/i],
+  "Equity": [/total\s+equity/i, /shareholders'?\s+equity/i, /net\s+assets/i],
+  "Free cash flow": [/free\s*cash\s*flow/i, /\bFCF\b/i],
+  "Cash Conv. Cycle (days)": [/cash conversion cycle/i],
+  "Net debt / EBITDA (x)": [/net debt \/ EBITDA/i],
+  "EBITDA / Interest (x)": [/EBITDA \/ interest/i],
+  "Current ratio (x)": [/current ratio/i]
+};
+
+function buildCreditMetricsTable() {
+  const tbody = document.getElementById('finBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  CREDIT_METRICS_ORDER.forEach(name => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${name}</td>
+      <td><input data-metric="${name}" data-year="2022" /></td>
+      <td><input data-metric="${name}" data-year="2023" /></td>
+      <td><input data-metric="${name}" data-year="2024" /></td>
+      <td></td>
+      <td></td>
+      <td></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function setMetricValue(metricName, year, value) {
+  const sel = 'input[data-metric="' + metricName + '"][data-year="' + year + '"]';
+  const el = document.querySelector(sel);
+  if (!el) return;
+  if (value == null || value === '') return;
+  el.value = value;
+}
+
+function findRowByPatterns(rows, patterns) {
+  if (!Array.isArray(rows)) return null;
+  for (const row of rows) {
+    const name = String(row.metric || '').toLowerCase();
+    for (const p of patterns) {
+      if (p.test(name)) return row;
+    }
+  }
+  return null;
+}
+
+function applyCreditMetricsFromFull(fullRows) {
+  if (!Array.isArray(fullRows)) fullRows = [];
+  const revRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Turnover"]);
+  const gpRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["GP"]);
+  const ebitdaRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["EBITDA"]);
+  const npRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Net profit"]);
+  const cashRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Cash & Bank"]);
+  const invRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Inventory"]);
+  const debtCurRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Debt - Current"]);
+  const debtNcRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Debt - Non-current"]);
+  const eqRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Equity"]);
+  const fcfRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Free cash flow"]);
+  const cccRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Cash Conv. Cycle (days)"]);
+  const ndEbitdaRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Net debt / EBITDA (x)"]);
+  const ebitdaIntRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["EBITDA / Interest (x)"]);
+  const curRatioRow = findRowByPatterns(fullRows, CREDIT_METRIC_PATTERNS["Current ratio (x)"]);
+
+  const years = [2022, 2023, 2024];
+
+  function val(row, year) {
+    if (!row) return null;
+    const key = 'y' + String(year);
+    return row[key];
+  }
+
+  years.forEach(y => {
+    const ys = String(y);
+    setMetricValue("Turnover", ys, val(revRow, y));
+    setMetricValue("GP", ys, val(gpRow, y));
+    setMetricValue("EBITDA", ys, val(ebitdaRow, y));
+    setMetricValue("Net profit", ys, val(npRow, y));
+    setMetricValue("Cash & Bank", ys, val(cashRow, y));
+    setMetricValue("Inventory", ys, val(invRow, y));
+    setMetricValue("Debt - Current", ys, val(debtCurRow, y));
+    setMetricValue("Debt - Non-current", ys, val(debtNcRow, y));
+    setMetricValue("Equity", ys, val(eqRow, y));
+    setMetricValue("Free cash flow", ys, val(fcfRow, y));
+    setMetricValue("Cash Conv. Cycle (days)", ys, val(cccRow, y));
+    setMetricValue("Net debt / EBITDA (x)", ys, val(ndEbitdaRow, y));
+    setMetricValue("EBITDA / Interest (x)", ys, val(ebitdaIntRow, y));
+    setMetricValue("Current ratio (x)", ys, val(curRatioRow, y));
+  });
+
+  years.forEach(y => {
+    const ys = String(y);
+    const rev = toNum(document.querySelector('input[data-metric="Turnover"][data-year="' + ys + '"]')?.value);
+    const gp = toNum(document.querySelector('input[data-metric="GP"][data-year="' + ys + '"]')?.value);
+    const ebitda = toNum(document.querySelector('input[data-metric="EBITDA"][data-year="' + ys + '"]')?.value);
+    const np = toNum(document.querySelector('input[data-metric="Net profit"][data-year="' + ys + '"]')?.value);
+    const cash = toNum(document.querySelector('input[data-metric="Cash & Bank"][data-year="' + ys + '"]')?.value);
+    const debtCur = toNum(document.querySelector('input[data-metric="Debt - Current"][data-year="' + ys + '"]')?.value);
+    const debtNc = toNum(document.querySelector('input[data-metric="Debt - Non-current"][data-year="' + ys + '"]')?.value);
+
+    if (rev && gp != null) {
+      setMetricValue("GP%", ys, ((gp / rev) * 100).toFixed(1));
+    }
+    if (rev && ebitda != null) {
+      setMetricValue("EBITDA margin %", ys, ((ebitda / rev) * 100).toFixed(1));
+    }
+    if (rev && np != null) {
+      setMetricValue("Net Profit %", ys, ((np / rev) * 100).toFixed(1));
+    }
+
+    const totalDebt = (debtCur || 0) + (debtNc || 0);
+    const netDebt = (totalDebt && cash != null) ? (totalDebt - cash) : null;
+    const ndMetric = document.querySelector('input[data-metric="Net debt / EBITDA (x)"][data-year="' + ys + '"]');
+    if (netDebt != null && ebitda) {
+      const ratio = netDebt / ebitda;
+      if (ndMetric && !ndMetric.value) ndMetric.value = ratio.toFixed(2);
     }
   });
 }
@@ -494,35 +766,27 @@ Trump's tariff impact
     }
   }
 
-  // Full table
-  const fullBody = document.getElementById('finBody');
-  if (fullBody) {
-    fullBody.innerHTML = '';
-    for (const key in d.full) {
-      const r = d.full[key];
-      const label = key.replace(/([A-Z])/g, ' $1').trim();
-      const yoy23 = ((r[23]-r[22]) / r[22] * 100).toFixed(1) + '%';
-      const yoy24 = ((r[24]-r[23]) / r[23] * 100).toFixed(1) + '%';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${label}</td>
-        <td>${r[22].toLocaleString()}</td>
-        <td>${r[23].toLocaleString()}</td>
-        <td>${r[24].toLocaleString()}</td>
-        <td>${yoy23}</td>
-        <td>${yoy24}</td>
-        <td>${r.q}</td>`;
-      fullBody.appendChild(tr);
-    }
+  // Full table -> use fixed credit metrics layout
+  buildCreditMetricsTable();
+  const demoFullRows = [];
+  for (const key in d.full) {
+    const r = d.full[key];
+    demoFullRows.push({
+      metric: key.replace(/([A-Z])/g, ' $1').trim(),
+      y2022: r[22],
+      y2023: r[23],
+      y2024: r[24],
+      latest_quarter: r.q
+    });
   }
+  applyCreditMetricsFromFull(demoFullRows);
 
-  // Liquidity notes
   const liqNotes = document.getElementById('liqNotes');
   if (liqNotes) {
     liqNotes.value = 'Net cash and asset-light model provide comfortable liquidity headroom above projected utilisation.';
     liqNotes.dispatchEvent(new Event('input'));
   }
 
-  // Recommendation & risks
   const rec = document.getElementById('recommend');
   if (rec) {
     rec.value = d.recommend;
@@ -534,7 +798,6 @@ Trump's tariff impact
     riskBox.dispatchEvent(new Event('input'));
   }
 
-  // Analysis box demo
   const analysisBox = document.getElementById('analysisBox');
   if (analysisBox) {
     analysisBox.innerHTML = `
@@ -565,6 +828,15 @@ async function autoFetchBuyer() {
   }
 
   const systemPrompt = `You are a senior credit analyst preparing a credit memo for a trade finance credit committee.
+
+DATA SOURCES (strict priority):
+1) Use the obligor's own official filings as the primary source: Annual Report / Form 20-F / 10-K / Interim Report / 10-Q / audited financial statements and official earnings releases or investor presentations hosted on the company investor site.
+2) If a filing cannot be found on the investor site, look for the same document on the relevant exchange or regulator (e.g. SEC EDGAR, HKEXnews, SGX) and use that exact document URL.
+3) Only if neither company nor regulator filings are available may you rely on reputable aggregators (e.g. Yahoo Finance, MarketWatch) as a non-official fallback, and you must label such sources as "non-official fallback".
+4) Never return a Google search results page as a link. Every source link must point directly to a specific report page or PDF that a human can open and download.
+
+All monetary amounts should be based on the reporting currency in the filings, but the memo treats figures conceptually as US$m. Keep the numeric scale internally consistent. Do not change the JSON schema or omit keys because of unit issues.
+
 Return ONLY a single valid JSON object (no markdown, no comments) with these keys:
 - exec_summary: string
 - key_highlights: string (bullet-style text separated by line breaks)
@@ -619,15 +891,10 @@ Within the financial_analysis text, for each major conclusion (e.g. revenue grow
 append a short textual source note in brackets, e.g. (Source: FY2024 20-F MD&A) or (Source: latest earnings release).
 Do not fabricate page numbers or overly granular sections; keep sources high level (annual report, Form 20-F, earnings release, investor presentation).`;
 
+  const userPrompt = "Prepare the JSON credit pack for obligor: " + buyer + ". Follow the schema exactly.";
   const payload = {
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: "Prepare the JSON credit pack for obligor: " + buyer + ". Follow the schema exactly."
-      }
-    ]
+    model: "gpt-4.1",
+    input: systemPrompt + "\n\n" + userPrompt
   };
 
   try {
@@ -640,14 +907,10 @@ Do not fabricate page numbers or overly granular sections; keep sources high lev
     const data = await res.json();
     console.log("Worker response:", data);
 
-    const content = data &&
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content;
+    const content = extractContentFromResponses(data);
 
     if (!content) {
-      alert("AI did not return choices[0].message.content; see console.");
+      alert("AI did not return any content; see console.");
       return;
     }
 
@@ -693,6 +956,7 @@ Do not fabricate page numbers or overly granular sections; keep sources high lev
             .join("");
         }
       }
+      populateSourcesFromAnalysis();
     }
 
     // Buyer info
@@ -719,7 +983,7 @@ Do not fabricate page numbers or overly granular sections; keep sources high lev
       });
     }
 
-    // Summary financials (normalised to required metric set)
+    // Summary financials
     {
       let rows = Array.isArray(j.summary_financials) ? j.summary_financials : [];
       rows = normaliseSummaryRows(rows);
@@ -750,37 +1014,11 @@ Do not fabricate page numbers or overly granular sections; keep sources high lev
       }
     }
 
-    // Full financials (normalised to required metric set)
+    // Full financials mapped into fixed credit metrics table
     {
-      let rows = Array.isArray(j.full_financials) ? j.full_financials : [];
-      rows = normaliseFullRows(rows);
-      const tbody = document.getElementById('finBody');
-      if (tbody) {
-        tbody.innerHTML = '';
-        rows.forEach(row => {
-          const m = row.metric || '';
-          const y22 = row.y2022;
-          const y23 = row.y2023;
-          const y24 = row.y2024;
-          const n22 = toNum(y22);
-          const n23 = toNum(y23);
-          const n24 = toNum(y24);
-          let yoy23 = '-', yoy24 = '-';
-          if (n22 && n23) yoy23 = ((n23-n22)/n22*100).toFixed(1) + '%';
-          if (n23 && n24) yoy24 = ((n24-n23)/n23*100).toFixed(1) + '%';
-          const latestQ = row.latest_quarter || '';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${m}</td>
-            <td>${y22 ?? ''}</td>
-            <td>${y23 ?? ''}</td>
-            <td>${y24 ?? ''}</td>
-            <td>${yoy23}</td>
-            <td>${yoy24}</td>
-            <td>${latestQ}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
+      const rows = Array.isArray(j.full_financials) ? j.full_financials : [];
+      buildCreditMetricsTable();
+      applyCreditMetricsFromFull(rows);
     }
 
     // Liquidity
@@ -814,17 +1052,16 @@ Do not fabricate page numbers or overly granular sections; keep sources high lev
     console.error(e);
     alert('Fetch failed: ' + e.message);
   } finally {
-    const btn = document.getElementById('refreshBuyer');
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Fetch Data';
+    const btn2 = document.getElementById('refreshBuyer');
+    if (btn2) {
+      btn2.disabled = false;
+      btn2.textContent = 'Fetch Data';
     }
   }
 }
 
 // ===== Refresh analysis from adjusted tables =====
 async function refreshAnalysisFromTables() {
-  // recompute YoY first
   recomputeYoYFromTables();
 
   const buyerName =
@@ -848,13 +1085,17 @@ async function refreshAnalysisFromTables() {
   const fullRows = [];
   document.querySelectorAll('#finBody tr').forEach(tr => {
     const tds = tr.querySelectorAll('td');
-    if (tds.length >= 7) {
+    if (tds.length >= 4) {
+      const metricName = tds[0].textContent.trim();
+      const y22Input = tds[1].querySelector('input');
+      const y23Input = tds[2].querySelector('input');
+      const y24Input = tds[3].querySelector('input');
       fullRows.push({
-        metric: tds[0].textContent.trim(),
-        y2022: toNum(tds[1].textContent),
-        y2023: toNum(tds[2].textContent),
-        y2024: toNum(tds[3].textContent),
-        latest_quarter: tds[6].textContent.trim()
+        metric: metricName,
+        y2022: toNum(y22Input && y22Input.value),
+        y2023: toNum(y23Input && y23Input.value),
+        y2024: toNum(y24Input && y24Input.value),
+        latest_quarter: ""
       });
     }
   });
@@ -891,18 +1132,12 @@ Do not fabricate page numbers or very specific document sections.
 End with a short 'Sources' paragraph referring generically to latest annual/quarterly filings, earnings releases and investor presentations (no fabricated page numbers).`;
 
   const payload = {
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: sys },
-      {
-        role: "user",
-        content: JSON.stringify({
-          obligor: buyerName,
-          summary_financials: summaryRows,
-          full_financials: fullRows
-        })
-      }
-    ]
+    model: "gpt-4.1",
+    input: sys + "\n\n" + JSON.stringify({
+      obligor: buyerName,
+      summary_financials: summaryRows,
+      full_financials: fullRows
+    })
   };
 
   try {
@@ -914,11 +1149,7 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
     const data = await res.json();
     console.log('Refresh analysis response:', data);
 
-    const content = data &&
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content;
+    const content = extractContentFromResponses(data);
 
     if (!content) {
       alert('No analysis content returned from refresh call.');
@@ -936,6 +1167,7 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
       }
     }
 
+    populateSourcesFromAnalysis();
     alert('Analysis refreshed based on updated tables.');
 
   } catch (e) {
@@ -946,7 +1178,8 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
 
 // ===== DOM Ready: wire up UI & chatbot =====
 document.addEventListener('DOMContentLoaded', () => {
-  // Required field highlighting
+  buildCreditMetricsTable();
+
   const requiredEls = document.querySelectorAll('[data-required="1"]');
   requiredEls.forEach(el => {
     const toggle = () => {
@@ -957,11 +1190,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.addEventListener('input', toggle);
   });
 
-  // Demo prefill button
   const demoBtn = document.getElementById('prefillWalmartBtn');
   if (demoBtn) demoBtn.addEventListener('click', prefillPDD);
 
-  // Floating chat toggle
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
   if (chatBtn && chatPanel) {
@@ -970,7 +1201,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Chatbot (Worker-backed)
   const askBtn = document.getElementById('floatAsk');
   const qBox = document.getElementById('floatQ');
   const aBox = document.getElementById('floatA');
@@ -1015,15 +1245,9 @@ Keep answers concise but technically sound, suitable for an investment committee
       analysisText
     ].join("\n");
 
-    const messages = [
-      { role: "system", content: sysPrompt },
-      ...chatHistory,
-      { role: "user", content: userContent }
-    ];
-
     const payload = {
-      model: "gpt-4o-mini",
-      messages
+      model: "gpt-4.1",
+      input: sysPrompt + "\n\n" + userContent
     };
 
     try {
@@ -1038,12 +1262,7 @@ Keep answers concise but technically sound, suitable for an investment committee
       }
 
       const data = await res.json();
-      const content =
-        data &&
-        data.choices &&
-        data.choices[0] &&
-        data.choices[0].message &&
-        data.choices[0].message.content;
+      const content = extractContentFromResponses(data);
 
       if (!content) {
         aBox.textContent = "Chat failed: empty response from Worker.";
@@ -1072,45 +1291,35 @@ Keep answers concise but technically sound, suitable for an investment committee
     askBtn.addEventListener('click', () => { runChat(); });
   }
 
-  // Fetch & refresh buttons
   const fetchBtn = document.getElementById('refreshBuyer');
-  if (fetchBtn) fetchBtn.addEventListener('click', autoFetchBuyer);
-
-  const refreshBtn = document.getElementById('refreshAnalysis');
-  if (refreshBtn) refreshBtn.addEventListener('click', refreshAnalysisFromTables);
+  if (fetchBtn && !fetchBtn._v68Bound) {
+    fetchBtn.addEventListener('click', autoFetchBuyer);
+    fetchBtn._v68Bound = true;
+  }
 });
 </script>
+
 <script>
-// ---- FINAL SOURCE AUTOLINK (safe for contenteditable + no freeze) ----
+// safety re-bind for Fetch Data button in v6_8_fix2
 (function(){
-
-  function convertSources() {
-    const box = document.getElementById("analysisBox");
-    if (!box) return;
-
-    // 1) 获取纯文本 + 当前 HTML
-    let html = box.innerHTML;
-
-    // 2) 正则寻找 Source: xxx（没有URL的版本）
-    html = html.replace(/Source:\s*([^.<\n]+)/gi, (match, text) => {
-      const q = encodeURIComponent(text.trim());
-      return `Source: <a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener noreferrer">${text.trim()}</a>`;
-    });
-
-    // 3) 暂时关闭 contenteditable 避免浏览器清洗标签
-    const prev = box.getAttribute("contenteditable");
-    box.setAttribute("contenteditable", "false");
-    box.innerHTML = html;
-    box.setAttribute("contenteditable", prev);
+  function bindFetch() {
+    try {
+      var btn = document.getElementById('refreshBuyer');
+      if (btn && !btn._v68Bound) {
+        btn.addEventListener('click', autoFetchBuyer);
+        btn._v68Bound = true;
+        console.log("autoFetchBuyer bound (v6_8_fix2 helper)");
+      }
+    } catch (e) {
+      console.error("bindFetch error", e);
+    }
   }
-
-  // ---- MutationObserver: 每次分析刷新都自动执行 ----
-  const target = document.getElementById("analysisBox");
-  if (target) {
-    const obs = new MutationObserver(() => convertSources());
-    obs.observe(target, { childList: true, subtree: true });
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(bindFetch, 0);
+  } else {
+    document.addEventListener('DOMContentLoaded', bindFetch);
   }
-
+  setTimeout(bindFetch, 1000);
 })();
 </script>
 
