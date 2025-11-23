@@ -710,25 +710,34 @@ function placeTourCard(step, opts = {}) {
     let left, top;
 
     if (step.id === 3) {
-      left = rect.left;
-      top = rect.bottom + 12;
 
-      // debug output
-      console.log("Step3 target rect:", rect);
-      console.log("Initial left/top:", left, top);
+  // 获取按钮真实位置
+  const btnRect = target.getBoundingClientRect();
 
-      if (top + cardHeight > viewportHeight - 20) {
-        top = rect.top - cardHeight - 12;
-        console.log("Step3 moved above target because bottom space insufficient");
-      }
-      if (left + cardWidth > viewportWidth - 20) {
-        left = viewportWidth - cardWidth - 20;
-        console.log("Step3 adjusted left because too far right");
-      }
-      if (left < 20) {
-        left = 20;
-        console.log("Step3 adjusted left because too far left");
-      }
+  const btnCenter = btnRect.left + btnRect.width / 2;
+
+  // 卡片宽度
+  const cardWidth = 360;
+
+  // 居中放置卡片
+  left = btnCenter - cardWidth / 2;
+
+  // 放在按钮下方 12px
+  top = btnRect.bottom + 12;
+
+  // 边界保护
+  if (left < 20) left = 20;
+  if (left + cardWidth > viewportWidth - 20) {
+    left = viewportWidth - cardWidth - 20;
+  }
+
+  // 如果按钮太下方 → 卡片显示在按钮上方
+  if (top + cardHeight > viewportHeight - 20) {
+    top = btnRect.top - cardHeight - 12;
+  }
+
+  console.log("Step3 center-aligned. final:", left, top);
+}
     } else {
       left = rect.left;
       top = rect.bottom + 12;
