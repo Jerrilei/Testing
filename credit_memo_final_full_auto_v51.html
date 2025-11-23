@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor v7.1</title>
+<title>Credit Memorandum — Final Editor v7.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -13,7 +13,6 @@
   --muted:#6b7280;
   --accent:#0b66c3;
   --danger:#ef4444;
-  --missing-ring:#facc15;
 }
 
 body{
@@ -38,54 +37,85 @@ body{
 }
 
 .section-title{
-  font-size:18px;font-weight:700;margin:4px 0 12px;
+  font-size:18px;
+  font-weight:700;
+  margin:4px 0 12px;
 }
 
 label{
-  font-size:13px;color:var(--muted);
+  font-size:13px;
+  color:var(--muted);
 }
 
 input,textarea,select{
-  width:100%;padding:8px 10px;margin-top:4px;
-  border-radius:8px;border:1px solid #d1d5db;
-  font-size:14px;background:#fff;box-sizing:border-box;
+  width:100%;
+  padding:8px 10px;
+  margin-top:4px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  background:#fff;
+  box-sizing:border-box;
 }
 
-textarea{ min-height:80px; resize:vertical; }
-
-input.highlight,textarea.highlight{
-  border-color:var(--missing-ring);
-  box-shadow:0 0 0 1px var(--missing-ring);
+textarea{
+  min-height:80px;
+  resize:vertical;
 }
 
 .table{
-  width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+  font-size:14px;
 }
+
 .table th,.table td{
-  padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top;
+  padding:8px;
+  border-bottom:1px solid #e5e7eb;
+  vertical-align:top;
 }
+
 .table th{
-  font-weight:600;text-align:left;background:#f9fafb;
+  font-weight:600;
+  text-align:left;
+  background:#f9fafb;
 }
 
 .btn{
   background:var(--accent);
-  color:#fff;padding:8px 18px;
-  border-radius:8px;border:0;cursor:pointer;
-  font-size:14px;font-weight:600;
-  display:inline-flex;align-items:center;gap:6px;
+  color:#fff;
+  padding:8px 18px;
+  border-radius:8px;
+  border:0;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
+
 .btn-outline{
-  background:transparent;border:2px solid var(--accent);color:var(--accent);
-  padding:7px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;
+  background:transparent;
+  border:2px solid var(--accent);
+  color:var(--accent);
+  padding:7px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:600;
 }
-.btn:disabled, .btn-outline:disabled{
-  opacity:.5;cursor:not-allowed;
+
+.btn:disabled,.btn-outline:disabled{
+  opacity:.5;
+  cursor:not-allowed;
 }
 
 .header-row{
-  display:flex;flex-direction:column;
-  align-items:stretch;gap:8px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
 .buyer-grid{
@@ -94,54 +124,154 @@ input.highlight,textarea.highlight{
   gap:18px;
 }
 
-.field-col{ display:flex;flex-direction:column;gap:10px; }
-.field{ display:flex;flex-direction:column; }
-.note{ font-size:12px;color:var(--muted); }
-.small{ font-size:12px; }
+.field{
+  display:flex;
+  flex-direction:column;
+}
+
+.note{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* Buyer name 强提示 */
+#buyerLookup{
+  border:2px solid var(--accent);
+  box-shadow:0 0 0 3px rgba(11,102,195,0.15);
+}
+
+#buyerTip{
+  font-size:12px;
+  color:#0b66c3;
+  margin-top:4px;
+}
 
 /* Obligor Ratings 3-column grid */
 .obligor-grid{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+
+/* Credit Parameters grid */
+.params-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px 18px;
 }
 
 /* Floating Chatbot */
 #chatFloatBtn{
-  position:fixed;right:24px;bottom:24px;
-  background:#0b66c3;color:#fff;
-  width:54px;height:54px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,0.25);z-index:999;
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  background:#0b66c3;
+  color:#fff;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);
+  z-index:999;
 }
+
 #chatPanel{
-  position:fixed;right:24px;bottom:90px;width:320px;
-  background:#fff;border-radius:12px;
+  position:fixed;
+  right:24px;
+  bottom:90px;
+  width:320px;
+  background:#fff;
+  border-radius:12px;
   box-shadow:0 8px 26px rgba(0,0,0,0.2);
-  padding:12px;display:none;z-index:998;
+  padding:12px;
+  display:none;
+  z-index:998;
 }
-#chatPanel textarea{ min-height:70px; }
 
-/* Hide during PDF */
-.pdf-hide{ display:none !important; }
+#chatPanel textarea{
+  min-height:70px;
+}
 
-/* V7.1 — fetch spinner */
-.spinner {
-  width: 14px;height:14px;
-  border:2px solid #fff;border-top-color:transparent;
+/* PDF export hide */
+.pdf-hide{
+  display:none !important;
+}
+
+/* Spinner for Fetch Data */
+.spinner{
+  width:14px;
+  height:14px;
+  border:2px solid #fff;
+  border-top-color:transparent;
   border-radius:50%;
   animation:spin 0.8s linear infinite;
 }
-@keyframes spin { 100%{ transform:rotate(360deg); } }
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
+
+/* Onboarding overlay */
+#onboardOverlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(2px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+#onboardBox{
+  background:#fff;
+  padding:24px;
+  border-radius:12px;
+  max-width:320px;
+  text-align:center;
+  box-shadow:0 8px 26px rgba(0,0,0,0.25);
+}
+
+#onboardBox h3{
+  margin:0 0 8px;
+  font-size:18px;
+  font-weight:700;
+}
+
+#onboardBox p{
+  margin:0;
+  font-size:14px;
+  color:#555;
+}
+
+#onboardClose{
+  margin-top:14px;
+  padding:6px 14px;
+  background:var(--accent);
+  border-radius:6px;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  border:none;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
 
-<!-- ========================= -->
-<!-- V7.1 UPDATED HEADER BLOCK -->
-<!-- ========================= -->
-
+<!-- HEADER -->
 <div class="card">
   <div class="header-row">
 
@@ -159,26 +289,25 @@ input.highlight,textarea.highlight{
     <!-- Row 2: Subtitle + Export -->
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div class="note">
-        Template aligned to PDF memo. Required fields are ringed in amber until completed.
+        Template aligned to PDF memo.
       </div>
-
       <button class="btn-outline" onclick="exportPDF()">Export PDF</button>
     </div>
 
-  </div> <!-- /header-row -->
+  </div><!-- /header-row -->
 
   <!-- Buyer lookup row -->
   <div style="display:flex;gap:12px;margin-top:14px;align-items:flex-end">
     <div style="flex:1">
       <label>Buyer name</label>
       <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
+      <div id="buyerTip">Step 1: Enter buyer legal name · Step 2: Click “Fetch Data” to auto-populate the memo.</div>
     </div>
-
     <button class="btn" id="refreshBuyer">Fetch Data</button>
   </div>
 
   <div style="margin-top:16px" class="section-title">Executive Summary</div>
-  <textarea id="execSummary" data-required="1"></textarea>
+  <textarea id="execSummary"></textarea>
 
   <div style="margin-top:12px" class="section-title">Key Highlights</div>
   <textarea id="highlights"></textarea>
@@ -189,67 +318,61 @@ input.highlight,textarea.highlight{
   <div class="section-title">Buyer Information</div>
   <div class="buyer-grid">
     <!-- Column 1 -->
-    <div class="field-col">
-      <div class="field">
-        <label>Borrower / Obligor *</label>
-        <input id="companyName" data-required="1" />
-      </div>
-      <div class="field">
-        <label>Group / Parent Legal Name</label>
-        <input id="groupParentName" />
-      </div>
-      <div class="field">
-        <label>Obligor Legal Name</label>
-        <input id="obligorLegalName" />
-      </div>
-      <div class="field">
-        <label>Country</label>
-        <input id="country" />
-      </div>
-      <div class="field">
-        <label>Country of Incorporation</label>
-        <input id="countryOfIncorp" />
-      </div>
+    <div class="field">
+      <label>Borrower / Obligor</label>
+      <input id="companyName" />
+    </div>
+    <div class="field">
+      <label>Group / Parent Legal Name</label>
+      <input id="groupParentName" />
+    </div>
+    <div class="field">
+      <label>Obligor Legal Name</label>
+      <input id="obligorLegalName" />
+    </div>
+    <div class="field">
+      <label>Country</label>
+      <input id="country" />
+    </div>
+    <div class="field">
+      <label>Country of Incorporation</label>
+      <input id="countryOfIncorp" />
     </div>
 
     <!-- Column 2 -->
-    <div class="field-col">
-      <div class="field">
-        <label>Business description</label>
-        <textarea id="business"></textarea>
-      </div>
-      <div class="field">
-        <label>Business activities</label>
-        <textarea id="coreBusinessActivities"></textarea>
-      </div>
-      <div class="field">
-        <label>Key Customers</label>
-        <textarea id="coreBusinessCustomers"></textarea>
-      </div>
-      <div class="field">
-        <label>Website</label>
-        <input id="coreBusinessWebsite" />
-      </div>
+    <div class="field">
+      <label>Business description</label>
+      <textarea id="business"></textarea>
+    </div>
+    <div class="field">
+      <label>Business activities</label>
+      <textarea id="coreBusinessActivities"></textarea>
+    </div>
+    <div class="field">
+      <label>Key Customers</label>
+      <textarea id="coreBusinessCustomers"></textarea>
+    </div>
+    <div class="field">
+      <label>Website</label>
+      <input id="coreBusinessWebsite" />
     </div>
 
     <!-- Column 3 -->
-    <div class="field-col">
-      <div class="field">
-        <label>Market Cap</label>
-        <input id="marketCap" />
-      </div>
-      <div class="field">
-        <label>External credit rating</label>
-        <input id="externalRating" />
-      </div>
-      <div class="field">
-        <label>Internal Rating (Current)</label>
-        <input id="internalRatingCurrent" />
-      </div>
-      <div class="field">
-        <label>Internal Rating (Proposed)</label>
-        <input id="internalRatingProposed" />
-      </div>
+    <div class="field">
+      <label>Market Cap</label>
+      <input id="marketCap" />
+    </div>
+    <div class="field">
+      <label>External credit rating</label>
+      <input id="externalRating" />
+    </div>
+    <div class="field">
+      <label>Internal Rating (Current)</label>
+      <input id="internalRatingCurrent" />
+    </div>
+    <div class="field">
+      <label>Internal Rating (Proposed)</label>
+      <input id="internalRatingProposed" />
     </div>
   </div>
 </div>
@@ -259,7 +382,14 @@ input.highlight,textarea.highlight{
   <div class="section-title">Financial Highlights (Summary)</div>
   <table class="table" id="summaryFinTbl">
     <thead>
-      <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>23 vs 22</th><th>24 vs 23</th></tr>
+      <tr>
+        <th>Metric</th>
+        <th>2022</th>
+        <th>2023</th>
+        <th>2024</th>
+        <th>23 vs 22</th>
+        <th>24 vs 23</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -268,69 +398,97 @@ input.highlight,textarea.highlight{
 <!-- CREDIT LIMITS -->
 <div class="card">
   <div class="section-title">Credit Limits</div>
+
+  <!-- A. Limits -->
   <table class="table">
     <thead>
       <tr>
-        <th>(US$m)</th><th>Existing</th><th>Current utilisation</th><th>Proposed</th>
-        <th>Insurer / GMV & insurance</th>
-        <th>Financing Terms</th>
+        <th>(US$m)</th>
+        <th>Existing</th>
+        <th>Current utilisation</th>
+        <th>Proposed</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <th>Secured</th>
-        <td><input id="limSecExisting" data-required="1" /></td>
-        <td><input id="limSecUtil" data-required="1" /></td>
-        <td><input id="limSecProp" data-required="1" /></td>
-        <td rowspan="4">
-          <div class="small"><strong>Insurer</strong></div>
-          <input id="insurer" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Credit Insurance Limit</strong></div>
-          <input id="creditInsLimit" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Advance Rate</strong></div>
-          <input id="advanceRate" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>TCS Rate</strong></div>
-          <input id="tcsRate" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Past 12 mth GMV</strong></div>
-          <input id="gmvPast12" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Forecast 12 mth GMV</strong></div>
-          <input id="gmvForecast12" data-required="1" />
-        </td>
-        <td rowspan="4">
-          <div class="small"><strong>Financing term</strong></div>
-          <input id="financingTerm" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Supplier Credit Days</strong></div>
-          <input id="supplierCreditDays" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Payment History / Delay Days</strong></div>
-          <input id="paymentHistory" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Dilution rate</strong></div>
-          <input id="dilutionRate" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>Peak / Average WC</strong></div>
-          <input id="peakAvgWc" data-required="1" />
-          <div class="small" style="margin-top:6px"><strong>LF Customer Since</strong></div>
-          <input id="customerSince" data-required="1" />
-        </td>
+        <td><input id="limSecExisting" /></td>
+        <td><input id="limSecUtil" /></td>
+        <td><input id="limSecProp" /></td>
       </tr>
       <tr>
         <th>Residual</th>
-        <td><input id="limResExisting" data-required="1" /></td>
-        <td><input id="limResUtil" data-required="1" /></td>
-        <td><input id="limResProp" data-required="1" /></td>
+        <td><input id="limResExisting" /></td>
+        <td><input id="limResUtil" /></td>
+        <td><input id="limResProp" /></td>
       </tr>
       <tr>
         <th>Clean</th>
-        <td><input id="limCleanExisting" data-required="1" /></td>
-        <td><input id="limCleanUtil" data-required="1" /></td>
-        <td><input id="limCleanProp" data-required="1" /></td>
+        <td><input id="limCleanExisting" /></td>
+        <td><input id="limCleanUtil" /></td>
+        <td><input id="limCleanProp" /></td>
       </tr>
       <tr>
         <th>Total</th>
-        <td><input id="limTotExisting" data-required="1" /></td>
-        <td><input id="limTotUtil" data-required="1" /></td>
-        <td><input id="limTotProp" data-required="1" /></td>
+        <td><input id="limTotExisting" /></td>
+        <td><input id="limTotUtil" /></td>
+        <td><input id="limTotProp" /></td>
       </tr>
     </tbody>
   </table>
+
+  <!-- B. Parameters (合并 Insurer + Financing Terms) -->
+  <div class="section-title" style="font-size:16px;margin-top:16px;">Parameters</div>
+  <div class="params-grid">
+    <div class="field">
+      <label>Insurer</label>
+      <input id="insurer" />
+    </div>
+    <div class="field">
+      <label>Credit Insurance Limit</label>
+      <input id="creditInsLimit" />
+    </div>
+    <div class="field">
+      <label>Advance Rate</label>
+      <input id="advanceRate" />
+    </div>
+    <div class="field">
+      <label>TCS Rate</label>
+      <input id="tcsRate" />
+    </div>
+    <div class="field">
+      <label>Past 12 mth GMV</label>
+      <input id="gmvPast12" />
+    </div>
+    <div class="field">
+      <label>Forecast 12 mth GMV</label>
+      <input id="gmvForecast12" />
+    </div>
+    <div class="field">
+      <label>Financing term</label>
+      <input id="financingTerm" />
+    </div>
+    <div class="field">
+      <label>Supplier Credit Days</label>
+      <input id="supplierCreditDays" />
+    </div>
+    <div class="field">
+      <label>Payment History / Delay Days</label>
+      <input id="paymentHistory" />
+    </div>
+    <div class="field">
+      <label>Dilution rate</label>
+      <input id="dilutionRate" />
+    </div>
+    <div class="field">
+      <label>Peak / Average WC</label>
+      <input id="peakAvgWc" />
+    </div>
+    <div class="field">
+      <label>LF Customer Since</label>
+      <input id="customerSince" />
+    </div>
+  </div>
 </div>
 
 <!-- FULL FINANCIALS -->
@@ -338,8 +496,7 @@ input.highlight,textarea.highlight{
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
     <div style="display:flex;gap:10px;">
-      <button class="btn" id="refreshAnalysisBtn"
-        onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
+      <button class="btn" id="refreshAnalysisBtn" onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
     </div>
   </div>
 
@@ -363,7 +520,7 @@ input.highlight,textarea.highlight{
 <div class="card">
   <div class="section-title">Automated Financial Analysis</div>
   <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
-  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the demo prefill.</div>
+  <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the auto-fill.</div>
 </div>
 
 <!-- SOURCES -->
@@ -379,13 +536,19 @@ input.highlight,textarea.highlight{
 <div class="card">
   <div class="section-title">Liquidity Metrics</div>
   <table class="table">
-    <tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>Notes</th></tr>
+    <tr>
+      <th>Metric</th>
+      <th>2022</th>
+      <th>2023</th>
+      <th>2024</th>
+      <th>Notes</th>
+    </tr>
     <tr>
       <td>Liquidity headroom</td>
-      <td><input id="liq22" data-required="1" /></td>
-      <td><input id="liq23" data-required="1" /></td>
-      <td><input id="liq24" data-required="1" /></td>
-      <td><textarea id="liqNotes" data-required="1"></textarea></td>
+      <td><input id="liq22" /></td>
+      <td><input id="liq23" /></td>
+      <td><input id="liq24" /></td>
+      <td><textarea id="liqNotes"></textarea></td>
     </tr>
   </table>
 </div>
@@ -396,15 +559,15 @@ input.highlight,textarea.highlight{
   <div class="obligor-grid">
     <div class="field">
       <label>Internal Score</label>
-      <input id="intScore" data-required="1" />
+      <input id="intScore" />
     </div>
     <div class="field">
       <label>External Rating</label>
-      <input id="extRating2" data-required="1" />
+      <input id="extRating2" />
     </div>
     <div class="field">
       <label>Rationale</label>
-      <textarea id="ratingRationale" data-required="1"></textarea>
+      <textarea id="ratingRationale"></textarea>
     </div>
   </div>
 </div>
@@ -412,13 +575,13 @@ input.highlight,textarea.highlight{
 <!-- RECOMMENDATION -->
 <div class="card">
   <div class="section-title">Recommendation & Action Plan</div>
-  <textarea id="recommend" data-required="1"></textarea>
+  <textarea id="recommend"></textarea>
 </div>
 
 <!-- RISKS -->
 <div class="card">
   <div class="section-title">Key Risks & Mitigants</div>
-  <textarea id="risks" data-required="1"></textarea>
+  <textarea id="risks"></textarea>
 </div>
 
 </div><!-- /container -->
@@ -433,23 +596,35 @@ input.highlight,textarea.highlight{
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
+<!-- Onboarding Overlay -->
+<div id="onboardOverlay">
+  <div id="onboardBox">
+    <h3>Start with the buyer name</h3>
+    <p>Step 1: Enter the buyer's legal name in the <b>Buyer name</b> field.</p>
+    <p>Step 2: Click <b>Fetch Data</b> to pull financials and analysis.</p>
+    <button id="onboardClose">Got it</button>
+  </div>
+</div>
+
 <!-- PDF EXPORT LIBS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-// ===== V7.1 Export PDF =====
+// ===== Export PDF (v7.2) =====
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
 
   const chatBtn = document.getElementById("chatFloatBtn");
   const chatPanel = document.getElementById("chatPanel");
+  const overlay = document.getElementById("onboardOverlay");
+
   if (chatBtn) chatBtn.classList.add("pdf-hide");
   if (chatPanel) chatPanel.classList.add("pdf-hide");
+  if (overlay) overlay.classList.add("pdf-hide");
 
   const container = document.querySelector(".container");
 
-  // 将输入控件替换成纯文本 div
   const replacements = [];
   const controls = container.querySelectorAll("input, textarea, select");
   controls.forEach(el => {
@@ -457,9 +632,7 @@ async function exportPDF() {
     let text = "";
     if (el.tagName === "SELECT") {
       const sel = el;
-      if (sel.selectedIndex >= 0) {
-        text = sel.options[sel.selectedIndex].text;
-      }
+      if (sel.selectedIndex >= 0) text = sel.options[sel.selectedIndex].text;
     } else {
       text = el.value || "";
     }
@@ -486,8 +659,8 @@ async function exportPDF() {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  const marginX = 10;  // mm
-  const marginY = 10;  // mm
+  const marginX = 10;
+  const marginY = 10;
   const usableWidth = pageWidth - marginX * 2;
   const usableHeight = pageHeight - marginY * 2;
 
@@ -497,7 +670,6 @@ async function exportPDF() {
 
   const imgWidthPx = imgProps.width;
   const imgHeightPx = imgProps.height;
-
   const imgHeightMm = (imgHeightPx * usableWidth) / imgWidthPx;
 
   let heightLeft = imgHeightMm;
@@ -515,7 +687,7 @@ async function exportPDF() {
 
   pdf.save("credit_memo.pdf");
 
-  // 恢复输入控件
+  // 恢复控件
   replacements.forEach(({ el, span, origDisplay }) => {
     if (span && span.parentNode) span.parentNode.removeChild(span);
     el.style.display = origDisplay || "";
@@ -523,11 +695,12 @@ async function exportPDF() {
 
   if (chatBtn) chatBtn.classList.remove("pdf-hide");
   if (chatPanel) chatPanel.classList.remove("pdf-hide");
+  if (overlay) overlay.classList.remove("pdf-hide");
 }
 </script>
 
 <script>
-// ===== 原始 JS（保留 + V7.1 微调） =====
+// ===== 原有 JS（适配 v7.2） =====
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s)"]+)/g;
   return text.replace(urlRegex, url => {
@@ -535,7 +708,6 @@ function linkify(text) {
   });
 }
 
-// Utility helpers
 const WORKER_URL = "https://credit-memo-proxy.jerrizhou.workers.dev";
 
 function extractContentFromResponses(data) {
@@ -862,16 +1034,18 @@ function applyCreditMetricsFromFull(fullRows) {
   });
 }
 
-// Demo PDD (按钮已删除，函数保留无影响)
-function prefillPDD() {
-  // ...（如需完全删除可以一起移除函数，这里保留原逻辑）...
-}
+// Demo prefill 保留占位
+function prefillPDD(){}
 
-// Auto Fetch via Worker (V7.1: 加 spinner)
+// Auto Fetch via Worker with overlay 引导
 async function autoFetchBuyer() {
   const buyer = (safeVal('buyerLookup') || '').trim();
+  const overlay = document.getElementById('onboardOverlay');
+
   if (!buyer) {
-    alert('Please enter buyer name first');
+    if (overlay) overlay.style.display = 'flex';
+    const inp = document.getElementById('buyerLookup');
+    if (inp) inp.focus();
     return;
   }
 
@@ -922,9 +1096,9 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
 
   try {
     const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
 
     const data = await res.json();
@@ -1077,7 +1251,6 @@ Return ONLY a single valid JSON object (no markdown, no comments) with these key
   }
 }
 
-// Refresh analysis from tables (V7.1: 加按钮 loading)
 async function refreshAnalysisFromTables() {
   recomputeYoYFromTables();
 
@@ -1169,9 +1342,9 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
 
   try {
     const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
     const data = await res.json();
     console.log('Refresh analysis response:', data);
@@ -1208,19 +1381,8 @@ End with a short 'Sources' paragraph referring generically to latest annual/quar
   }
 }
 
-// DOM Ready: wire up
 document.addEventListener('DOMContentLoaded', () => {
   buildCreditMetricsTable();
-
-  const requiredEls = document.querySelectorAll('[data-required="1"]');
-  requiredEls.forEach(el => {
-    const toggle = () => {
-      if ((el.value || '').trim()) el.classList.remove('highlight');
-      else el.classList.add('highlight');
-    };
-    toggle();
-    el.addEventListener('input', toggle);
-  });
 
   const chatBtn = document.getElementById('chatFloatBtn');
   const chatPanel = document.getElementById('chatPanel');
@@ -1281,14 +1443,12 @@ Keep answers concise but technically sound, suitable for an investment committee
 
     try {
       const res = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error("HTTP " + res.status);
-      }
+      if (!res.ok) throw new Error("HTTP " + res.status);
 
       const data = await res.json();
       const content = extractContentFromResponses(data);
@@ -1299,8 +1459,8 @@ Keep answers concise but technically sound, suitable for an investment committee
       }
 
       chatHistory.push(
-        { role: "user", content: q },
-        { role: "assistant", content }
+        { role:"user", content:q },
+        { role:"assistant", content }
       );
 
       aBox.innerHTML = content
@@ -1320,23 +1480,38 @@ Keep answers concise but technically sound, suitable for an investment committee
     askBtn.addEventListener('click', () => { runChat(); });
   }
 
+  // Bind Fetch Data button
   const fetchBtn = document.getElementById('refreshBuyer');
-  if (fetchBtn && !fetchBtn._v68Bound) {
+  if (fetchBtn && !fetchBtn._bound) {
     fetchBtn.addEventListener('click', autoFetchBuyer);
-    fetchBtn._v68Bound = true;
+    fetchBtn._bound = true;
+  }
+
+  // Onboarding overlay close
+  const overlay = document.getElementById('onboardOverlay');
+  const overlayClose = document.getElementById('onboardClose');
+  if (overlay && overlayClose) {
+    overlayClose.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      const inp = document.getElementById('buyerLookup');
+      if (inp) inp.focus();
+    });
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+      }
+    });
   }
 });
-</script>
 
-<script>
-// safety re-bind for Fetch Data button
+// safety re-bind
 (function(){
   function bindFetch() {
     try {
       var btn = document.getElementById('refreshBuyer');
-      if (btn && !btn._v68Bound) {
+      if (btn && !btn._bound) {
         btn.addEventListener('click', autoFetchBuyer);
-        btn._v68Bound = true;
+        btn._bound = true;
         console.log("autoFetchBuyer bound (safety helper)");
       }
     } catch (e) {
