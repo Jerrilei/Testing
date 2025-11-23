@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor</title>
+<title>Credit Memorandum — Final Editor v6.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--muted:#6b7280;--accent:#0b66c3;--danger:#ef4444;--missing-ring:#facc15}
@@ -36,6 +36,9 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
 #chatFloatBtn{position:fixed;right:24px;bottom:24px;background:#0b66c3;color:#fff;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.25);z-index:999}
 #chatPanel{position:fixed;right:24px;bottom:90px;width:320px;background:#fff;border-radius:12px;box-shadow:0 8px 26px rgba(0,0,0,0.2);padding:12px;display:none;z-index:998}
 #chatPanel textarea{min-height:70px}
+
+/* Hide elements during PDF export */
+.pdf-hide{display:none !important;}
 </style>
 </head>
 <body>
@@ -61,7 +64,6 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       <label>Buyer name</label>
       <input id="buyerLookup" placeholder="Type buyer name (e.g. Walmart)" />
     </div>
-    <!-- 这里加了 onclick，确保一定触发 autoFetchBuyer -->
     <button class="btn" id="refreshBuyer" onclick="autoFetchBuyer()">Fetch Data</button>
     <button class="btn-outline" id="prefillWalmartBtn">Demo (PDD)</button>
   </div>
@@ -77,7 +79,7 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
 <div class="card">
   <div class="section-title">Buyer Information</div>
   <div class="buyer-grid">
-    <!-- Column 1: Basic info -->
+    <!-- Column 1 -->
     <div class="field-col">
       <div class="field">
         <label>Borrower / Obligor *</label>
@@ -101,7 +103,7 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       </div>
     </div>
 
-    <!-- Column 2: Core business -->
+    <!-- Column 2 -->
     <div class="field-col">
       <div class="field">
         <label>Business description</label>
@@ -121,7 +123,7 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
       </div>
     </div>
 
-    <!-- Column 3: Ratings / market cap -->
+    <!-- Column 3 -->
     <div class="field-col">
       <div class="field">
         <label>Market Cap</label>
@@ -224,7 +226,14 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
 
 <!-- FULL FINANCIALS -->
 <div class="card">
-  <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="section-title">Financial Highlights (Full — Credit Metrics)</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="refreshAnalysisFromTables()">Refresh Analysis</button>
+      <button class="btn-outline" onclick="exportPDF()">Export PDF</button>
+    </div>
+  </div>
+
   <table class="table" id="finTableFull">
     <thead>
       <tr>
@@ -247,7 +256,6 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
   <div id="analysisBox" contenteditable="true" style="font-size:14px;line-height:1.5"></div>
   <div class="note" style="margin-top:6px">You can edit the analysis text directly above after the demo prefill.</div>
 </div>
-
 
 <!-- SOURCES -->
 <div class="card">
@@ -273,7 +281,7 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
   </table>
 </div>
 
-<!-- OBLIGOR RATINGS (3 columns) -->
+<!-- OBLIGOR RATINGS -->
 <div class="card">
   <div class="section-title">Obligor Ratings</div>
   <div class="obligor-grid">
@@ -316,7 +324,93 @@ input.highlight,textarea.highlight{border-color:var(--missing-ring);box-shadow:0
   <div id="floatA" style="margin-top:8px;font-size:13px;color:#374151">—</div>
 </div>
 
+<!-- PDF EXPORT LIBS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
+// Export PDF (P2: 把 input/textarea/select 临时转换为纯文本块，再截图)
+async function exportPDF() {
+  const { jsPDF } = window.jspdf;
+
+  // 隐藏浮标和聊天面板
+  const chatBtn = document.getElementById("chatFloatBtn");
+  const chatPanel = document.getElementById("chatPanel");
+  if (chatBtn) chatBtn.classList.add("pdf-hide");
+  if (chatPanel) chatPanel.classList.add("pdf-hide");
+
+  // 把所有输入控件替换成纯文本 div
+  const replacements = [];
+  const controls = document.querySelectorAll("input, textarea, select");
+  controls.forEach(el => {
+    const style = window.getComputedStyle(el);
+    let text = "";
+    if (el.tagName === "SELECT") {
+      const sel = el;
+      if (sel.selectedIndex >= 0) {
+        text = sel.options[sel.selectedIndex].text;
+      }
+    } else {
+      text = el.value || "";
+    }
+
+    const span = document.createElement("div");
+    span.textContent = text;
+    span.style.minHeight = el.offsetHeight + "px";
+    span.style.whiteSpace = "pre-wrap";
+    span.style.fontSize = style.fontSize;
+    span.style.lineHeight = style.lineHeight;
+    span.style.fontFamily = style.fontFamily;
+    span.style.padding = "4px 0";
+    span.style.border = "none";
+    span.style.background = "transparent";
+
+    const origDisplay = el.style.display;
+    el.style.display = "none";
+    el.parentNode.insertBefore(span, el.nextSibling);
+
+    replacements.push({ el, span, origDisplay });
+  });
+
+  // 生成 PDF
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  const canvas = await html2canvas(document.body, { scale: 2, useCORS: true });
+  const imgData = canvas.toDataURL("image/png");
+  const imgProps = pdf.getImageProperties(imgData);
+  const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    pdf.addPage();
+    position = heightLeft - imgHeight;
+    pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  pdf.save("credit_memo.pdf");
+
+  // 恢复输入控件
+  replacements.forEach(({ el, span, origDisplay }) => {
+    if (span && span.parentNode) span.parentNode.removeChild(span);
+    el.style.display = origDisplay || "";
+  });
+
+  if (chatBtn) chatBtn.classList.remove("pdf-hide");
+  if (chatPanel) chatPanel.classList.remove("pdf-hide");
+}
+</script>
+
+<script>
+// ===== 原始 JS（保留） =====
+
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s)"]+)/g;
   return text.replace(urlRegex, url => {
