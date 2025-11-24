@@ -59,14 +59,21 @@ textarea{ min-height:80px; resize:vertical; }
 .table th,.table td{
   padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top;
 }
-/* ===== Numeric Columns Right Alignment (Global) ===== */
-.table td:nth-child(n+2),
-.table th:nth-child(n+2) {
-  text-align: right;
-}
 
 .table th{
-  font-weight:600;text-align:left;background:#f9fafb;
+  font-weight:600;
+  text-align:left;
+  background:#f9fafb;
+}
+
+/* ===== Numeric columns right-aligned: summary + full tables ===== */
+#summaryTopTbl th:nth-child(n+2),
+#summaryTopTbl td:nth-child(n+2),
+#summaryBottomTbl th:nth-child(n+2),
+#summaryBottomTbl td:nth-child(n+2),
+#finTableFull th:nth-child(n+2),
+#finTableFull td:nth-child(n+2){
+  text-align:right;
 }
 
 .btn{
@@ -348,7 +355,7 @@ textarea{ min-height:80px; resize:vertical; }
 <!-- CREDIT LIMITS + PARAMETERS -->
 <div class="card">
   <div class="section-title">Credit Limits</div>
-  <table class="table">
+  <table class="table" id="creditLimitsTbl">
     <thead>
       <tr>
         <th>(US$m)</th><th>Existing</th><th>Current utilisation</th><th>Proposed</th>
