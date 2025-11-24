@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Credit Memorandum — Final Editor v8.3</title>
+<title>Credit Memorandum — Final Editor v8.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -1434,9 +1434,11 @@ END OF SYSTEM PROMPT.`;
   const userPrompt = "Prepare the JSON credit pack for obligor: " + buyer + ". Follow the schema exactly and output only the JSON object.";
 
   const payload = {
-    model: "gpt-4.1",
-    input: systemPrompt + "\n\n" + userPrompt
-  };
+  messages: [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt }
+  ]
+};
 
   try {
     const res = await fetch(WORKER_URL, {
@@ -1695,13 +1697,21 @@ Do not fabricate page numbers or very specific document sections.
 End with a short 'Sources' paragraph referring generically to latest annual/quarterly filings, earnings releases and investor presentations (no fabricated page numbers).`;
 
   const payload = {
-    model: "gpt-4.1",
-    input: sys + "\n\n" + JSON.stringify({
-      obligor: buyerName,
-      summary_financials: summaryRows,
-      full_financials: fullRows
-    })
-  };
+  messages: [
+    {
+      role: "system",
+      content: sys
+    },
+    {
+      role: "user",
+      content: JSON.stringify({
+        obligor: buyerName,
+        summary_financials: summaryRows,
+        full_financials: fullRows
+      })
+    }
+  ]
+};
 
   try {
     const res = await fetch(WORKER_URL, {
@@ -1802,8 +1812,10 @@ Keep answers concise but technically sound, suitable for an investment committee
     ].join("\n");
 
     const payload = {
-      model: "gpt-4.1",
-      input: sysPrompt + "\n\n" + userContent
+      messages: [
+        { role: "system", content: sysPrompt },
+        { role: "user", content: userContent }
+      ]
     };
 
     try {
