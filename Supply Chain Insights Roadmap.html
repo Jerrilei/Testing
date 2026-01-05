@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Insights - Complete Strategy & Resources</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background-color: #f8fafc; 
+            padding: 20px; 
+            color: #333; 
+            min-height: 100vh;
+        }
+        
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        /* 页面导航 */
+        .page-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn.active {
+            background-color: #1e40af;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+        
+        /* 页面内容 */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 共用样式 */
+        .slide-container { 
+            width: 100%; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); 
+            overflow: hidden; 
+            margin-bottom: 30px; 
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); 
+            color: white; 
+            padding: 28px 40px; 
+        }
+        
+        .title { 
+            font-size: 32px; 
+            font-weight: 700; 
+            margin-bottom: 6px; 
+        }
+        
+        .subtitle { 
+            font-size: 18px; 
+            opacity: 0.9; 
+            font-weight: 400; 
+        }
+        
+        .timeline-placeholder { 
+            background-color: #f1f5f9; 
+            padding: 18px 40px; 
+            border-bottom: 1px solid #e2e8f0; 
+            color: #475569; 
+            font-size: 16px; 
+            font-style: italic; 
+        }
+        
+        .content { 
+            padding: 30px; 
+        }
+        
+        /* 可编辑内容样式 */
+        .editable-content {
+            cursor: text;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            min-height: 1.2em;
+            outline: none;
+            width: 100%;
+        }
+        
+        .editable-content:hover,
+        .editable-content:focus {
+            background-color: #f0f9ff;
+            box-shadow: 0 0 0 1px #3b82f6 inset;
+        }
+        
+        /* 矩阵表格样式 */
+        .matrix-grid { 
+            display: grid; 
+            grid-template-columns: 200px repeat(3, 1fr); 
+            gap: 1px; 
+            background-color: #e2e8f0; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin-top: 20px; 
+        }
+        
+        .cell { 
+            background-color: white; 
+            padding: 20px; 
+            min-height: 120px; 
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.2s ease; 
+            position: relative; 
+        }
+        
+        .phase-header { 
+            background-color: #f8fafc; 
+            font-weight: 700; 
+            font-size: 18px; 
+            text-align: center; 
+            justify-content: center; 
+            border-bottom: 3px solid #e2e8f0; 
+            min-height: 70px; 
+        }
+        
+        .phase-1-header { 
+            color: #1e3a8a; 
+            border-top: 4px solid #3b82f6; 
+        }
+        
+        .phase-2-header { 
+            color: #c2410c; 
+            border-top: 4px solid #f97316; 
+        }
+        
+        .phase-3-header { 
+            color: #047857; 
+            border-top: 4px solid #10b981; 
+        }
+        
+        .phase-tag { 
+            font-size: 13px; 
+            font-weight: 600; 
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            display: inline-block; 
+            margin-top: 8px; 
+        }
+        
+        .phase-1-header .phase-tag { 
+            background-color: #dbeafe; 
+            color: #1d4ed8; 
+        }
+        
+        .phase-2-header .phase-tag { 
+            background-color: #ffedd5; 
+            color: #ea580c; 
+        }
+        
+        .phase-3-header .phase-tag { 
+            background-color: #d1fae5; 
+            color: #059669; 
+        }
+        
+        .audience-header { 
+            background-color: #f8fafc; 
+            font-weight: 700; 
+            font-size: 17px; 
+            border-right: 3px solid #e2e8f0; 
+            justify-content: center; 
+            min-height: 120px; 
+            padding: 20px 15px; 
+        }
+        
+        .audience-1-header { 
+            color: #1d4ed8; 
+            border-left: 6px solid #3b82f6; 
+        }
+        
+        .audience-2-header { 
+            color: #ea580c; 
+            border-left: 6px solid #f97316; 
+        }
+        
+        .audience-3-header { 
+            color: #059669; 
+            border-left: 6px solid #10b981; 
+        }
+        
+        .audience-subtitle { 
+            font-size: 13px; 
+            font-weight: 500; 
+            color: #64748b; 
+            margin-top: 6px; 
+            font-style: italic; 
+        }
+        
+        .content-cell { 
+            font-size: 13px; 
+            line-height: 1.5; 
+        }
+        
+        .tagline { 
+            font-weight: 700; 
+            font-size: 14px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            color: #334155; 
+        }
+        
+        .audience-1-content .tagline { 
+            color: #1d4ed8; 
+        }
+        
+        .audience-2-content .tagline { 
+            color: #ea580c; 
+        }
+        
+        .audience-3-content .tagline { 
+            color: #059669; 
+        }
+        
+        .bullet-points { 
+            list-style: none; 
+            padding-left: 0; 
+            margin-bottom: 10px;
+        }
+        
+        .bullet-points li { 
+            margin-bottom: 8px; 
+            padding-left: 18px; 
+            position: relative; 
+        }
+        
+        .bullet-points li::before { 
+            content: "•"; 
+            position: absolute; 
+            left: 8px; 
+            font-weight: bold; 
+            font-size: 14px; 
+        }
+        
+        .audience-1-content .bullet-points li::before { 
+            color: #3b82f6; 
+        }
+        
+        .audience-2-content .bullet-points li::before { 
+            color: #f97316; 
+        }
+        
+        .audience-3-content .bullet-points li::before { 
+            color: #10b981; 
+        }
+        
+        .keyword { 
+            font-weight: 700; 
+            background-color: #f1f5f9; 
+            padding: 1px 4px; 
+            border-radius: 3px; 
+            border-left: none;
+        }
+        
+        .audience-1-content .keyword { 
+            background-color: #eff6ff; 
+        }
+        
+        .audience-2-content .keyword { 
+            background-color: #fff7ed; 
+        }
+        
+        .audience-3-content .keyword { 
+            background-color: #f0fdf4; 
+        }
+        
+        .collaboration-section {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 12px;
+        }
+        
+        .collaboration-title {
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        
+        /* 资源需求矩阵专用样式 */
+        .resource-matrix-grid {
+            display: grid;
+            grid-template-columns: 180px repeat(3, 1fr);
+            gap: 1px;
+            background-color: #e2e8f0;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .resource-cell {
+            background-color: white;
+            padding: 18px;
+            min-height: 150px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .resource-audience-header {
+            background-color: #f8fafc;
+            font-weight: 700;
+            font-size: 15px;
+            border-right: 3px solid #e2e8f0;
+            justify-content: center;
+            padding: 18px 15px;
+        }
+        
+        .resource-role-list {
+            margin-bottom: 8px;
+        }
+        
+        .resource-role-item {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .resource-role-item::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .resource-audience-1 .resource-role-item::before { color: #3b82f6; }
+        .resource-audience-2 .resource-role-item::before { color: #f97316; }
+        .resource-audience-3 .resource-role-item::before { color: #10b981; }
+        
+        .required-role {
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .collaboration-role {
+            font-weight: 600;
+            color: #7c3aed;
+        }
+        
+        .resource-keyword {
+            font-weight: 700;
+            background-color: #f1f5f9;
+            padding: 1px 4px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        
+        .footer-note { 
+            margin-top: 30px; 
+            font-size: 14px; 
+            color: #64748b; 
+            text-align: center; 
+            font-style: italic; 
+            padding-top: 20px; 
+            border-top: 1px dashed #cbd5e1; 
+        }
+        
+        .control-panel { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 100px; 
+            display: flex; 
+            gap: 10px; 
+            background: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+        
+        .control-btn { 
+            padding: 10px 20px; 
+            background-color: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover { 
+            background-color: #2563eb; 
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.reset { 
+            background-color: #64748b; 
+        }
+        
+        .control-btn.reset:hover { 
+            background-color: #475569; 
+        }
+        
+        @media (max-width: 900px) {
+            .matrix-grid, .resource-matrix-grid { 
+                display: block; 
+                background: none; 
+                border: none; 
+            }
+            
+            .cell, .resource-cell { 
+                margin-bottom: 15px; 
+                border: 1px solid #e2e8f0; 
+                border-radius: 10px; 
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); 
+            }
+            
+            .phase-header, .audience-header, .resource-audience-header { 
+                text-align: left; 
+                justify-content: flex-start; 
+                border-right: none; 
+                border-left: 6px solid; 
+            }
+            
+            .phase-header { 
+                border-top: none; 
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .page-nav {
+                flex-direction: column;
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面导航 -->
+    <div class="page-nav">
+        <button class="nav-btn active" onclick="showPage(1)">📊 Strategy Roadmap</button>
+        <button class="nav-btn" onclick="showPage(2)">👥 Resource Matrix</button>
+    </div>
+    
+    <div class="page-container">
+        <!-- 第1页：战略路线图 -->
+        <div class="page active" id="page1">
+            <div class="slide-container">
+                <div class="header">
+                    <div class="title">Supply Chain Insights</div>
+                    <div class="subtitle">Strategic Roadmap: Value Creation Across Key Stakeholders</div>
+                </div>
+                <div class="timeline-placeholder">
+                    <div class="editable-content" contenteditable="true">Timeline: Now → 6 months → 12-18 months</div>
+                </div>
+                <div class="content">
+                    <div class="matrix-grid">
+                        <div class="cell phase-header"></div>
+                        <div class="cell phase-header phase-1-header">
+                            <div class="editable-content" contenteditable="true">Phase 1: Foundation & Pilot</div>
+                            <div class="phase-tag">BUILD & VALIDATE</div>
+                        </div>
+                        <div class="cell phase-header phase-2-header">
+                            <div class="editable-content" contenteditable="true">Phase 2: Scale & Expand</div>
+                            <div class="phase-tag">DEPLOY & OPTIMIZE</div>
+                        </div>
+                        <div class="cell phase-header phase-3-header">
+                            <div class="editable-content" contenteditable="true">Phase 3: Ecosystem & Monetize</div>
+                            <div class="phase-tag">AUTOMATE & CONNECT</div>
+                        </div>
+
+                        <!-- A8 Internal -->
+                        <div class="cell audience-header audience-1-header">
+                            <div class="editable-content" contenteditable="true">A8 Internal</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Core Business Enablement</div></div>
+                        </div>
+                        <div class="cell content-cell audience-1-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🔧 Process Framework + 📊 Model Build</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Establish initial scoring workflow: Integrate into sales funnel (Pre-screen → Prioritize → Final Decision)</div></li>
+                                <li><div class="editable-content" contenteditable="true">Execute Pre-shipment Financing pilot (process & data validation)</div></li>
+                                <li><div class="editable-content" contenteditable="true">Design E-commerce/Quick Commerce sub-scorecard</div></li>
+                                <li><div class="editable-content" contenteditable="true">Research Import Financing product requirements</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-1-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🚀 Scale Validation + ⚙️ Deep Integration</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Launch E-commerce/Quick Commerce industry pilots</div></li>
+                                <li><div class="editable-content" contenteditable="true">Roll out Import Financing MVP</div></li>
+                                <li><div class="editable-content" contenteditable="true">Process Automation: Enable more efficient, data-driven decisions</div></li>
+                                <li><div class="editable-content" contenteditable="true">Introduce Post-disbursement Monitoring: Build client risk monitoring & refresh score process</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-1-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🤖 Intelligence + Platform</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Fully Automated Decision Engine for all products</div></li>
+                                <li><div class="editable-content" contenteditable="true">Dynamic Risk-Based Pricing models</div></li>
+                                <li><div class="editable-content" contenteditable="true">Intelligent Post-disbursement Monitoring: Real-time alerts & auto refresh</div></li>
+                                <li><div class="editable-content" contenteditable="true">Configurable Risk Engine for rapid new product launch</div></li>
+                            </ul>
+                        </div>
+
+                        <!-- Buyer / Supplier -->
+                        <div class="cell audience-header audience-2-header">
+                            <div class="editable-content" contenteditable="true">Buyer / Supplier</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Supply Chain Partnership</div></div>
+                        </div>
+                        <div class="cell content-cell audience-2-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🤝 Value Proposition + 📈 Capability Build</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Articulate Data-for-Financing Value: Explain how supplier data unlocks better financing terms</div></li>
+                                <li><div class="editable-content" contenteditable="true">Accumulate Industry Insights: Refine assessment dimensions with experts</div></li>
+                                <li><div class="editable-content" contenteditable="true">Prepare Service Prototype: Design supplier assessment report framework</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-2-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🎯 Pilot Delivery + 💡 Insight Service</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Pilot "Supplier Health Dashboard" for Buyers (risk visualization)</div></li>
+                                <li><div class="editable-content" contenteditable="true">Provide Alternative Sourcing recommendations</div></li>
+                                <li><div class="editable-content" contenteditable="true">Offer Priority Financing Access to high-scoring suppliers</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-2-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🌟 Strategic Partnership + 🔄 Ecosystem Optimization</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Supply Chain Resilience Consulting</div></li>
+                                <li><div class="editable-content" contenteditable="true">Supplier Development Recommendations</div></li>
+                                <li><div class="editable-content" contenteditable="true">Co-designed Buyer-Supplier Financing Programs</div></li>
+                            </ul>
+                        </div>
+
+                        <!-- Funders -->
+                        <div class="cell audience-header audience-3-header">
+                            <div class="editable-content" contenteditable="true">Capital Provider</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Funding & Scale</div></div>
+                        </div>
+                        <div class="cell content-cell audience-3-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">📝 Methodology + ✅ Internal Validation</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Document Risk Assessment Methodology</div></li>
+                                <li><div class="editable-content" contenteditable="true">Internal Back-testing: using group data to validate model accuracy (based on client upgrade/downgrade/exit history)</div></li>
+                                <li><div class="editable-content" contenteditable="true">Establish Performance Tracking baseline</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-3-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">📊 Data Proof + 📈 Narrative Building</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Generate Model Validation Report: showing prediction accuracy & stability based on historical data</div></li>
+                                <li><div class="editable-content" contenteditable="true">Package Portfolio Insights: demonstrating risk tiering & performance correlation using existing client data</div></li>
+                                <li><div class="editable-content" contenteditable="true">Build initial Asset Quality Narrative</div></li>
+                            </ul>
+                        </div>
+                        <div class="cell content-cell audience-3-content">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🏦 Productization + 🔗 Capital Connection</div></div>
+                            <ul class="bullet-points">
+                                <li><div class="editable-content" contenteditable="true">Launch Transparent Asset Pools: based on score rating & historical performance data</div></li>
+                                <li><div class="editable-content" contenteditable="true">Provide Funder Portal: real-time monitoring data, alert signals & rule engine configuration interface</div></li>
+                                <li><div class="editable-content" contenteditable="true">Access Lower-Cost Institutional Capital: exchange for data-driven transparency</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-note">
+                        <div class="editable-content" contenteditable="true">Each phase builds on the previous, creating compounding value for all stakeholders.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第2页：资源需求矩阵 -->
+        <div class="page" id="page2">
+            <div class="slide-container">
+                <div class="header">
+                    <div class="title">Resource & Capability Requirements Matrix</div>
+                    <div class="subtitle">Team Allocation & Collaboration Needs by Phase</div>
+                </div>
+                <div class="content">
+                    <div class="resource-matrix-grid">
+                        <!-- 表头 -->
+                        <div class="cell phase-header"></div>
+                        <div class="cell phase-header phase-1-header">
+                            <div class="editable-content" contenteditable="true">Phase 1: Foundation & Pilot</div>
+                            <div class="phase-tag">BUILD & VALIDATE</div>
+                        </div>
+                        <div class="cell phase-header phase-2-header">
+                            <div class="editable-content" contenteditable="true">Phase 2: Scale & Expand</div>
+                            <div class="phase-tag">DEPLOY & OPTIMIZE</div>
+                        </div>
+                        <div class="cell phase-header phase-3-header">
+                            <div class="editable-content" contenteditable="true">Phase 3: Ecosystem & Monetize</div>
+                            <div class="phase-tag">AUTOMATE & CONNECT</div>
+                        </div>
+
+                        <!-- A8 Internal -->
+                        <div class="cell resource-audience-header audience-1-header">
+                            <div class="editable-content" contenteditable="true">A8 Internal</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Core Business Enablement</div></div>
+                        </div>
+                        
+                        <!-- Phase 1 -->
+                        <div class="resource-cell resource-audience-1">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🔧 Technical Implementation + 👥 Knowledge Integration</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Dev Team:</span> <span class="editable-content" contenteditable="true">Process integration & system interfaces</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ SDU Team:</span> <span class="editable-content" contenteditable="true">Data pipelines & analytics</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Industry Experts:</span> <span class="editable-content" contenteditable="true">Expert model & industry know-how</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Business Team: Pre-shipment pilot clients & data access</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 2 -->
+                        <div class="resource-cell resource-audience-1">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🚀 Scale Validation + ⚙️ System Deepening</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ SDU Team:</span> <span class="editable-content" contenteditable="true">Data analysis & dynamic pricing models</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Risk Team:</span> <span class="editable-content" contenteditable="true">Post-disbursement monitoring</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Platform PM:</span> <span class="editable-content" contenteditable="true">Project management & coordination</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Business Development:</span> <span class="editable-content" contenteditable="true">Import Financing market research</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Product Team: Import Financing MVP requirements</div>
+                                <div class="editable-content" contenteditable="true">- Industry Consultants: E-commerce/Quick Commerce risk expertise (short-term)</div>
+                                <div class="editable-content" contenteditable="true">- Business Team: E-commerce pilot client access</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 3 -->
+                        <div class="resource-cell resource-audience-1">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🤖 Intelligence + 🏗️ Platformization</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Dev Team + Architect:</span> <span class="editable-content" contenteditable="true">Decision engine</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ SDU Team:</span> <span class="editable-content" contenteditable="true">Data infrastructure & models</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Platform PM:</span> <span class="editable-content" contenteditable="true">Platform strategy</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Marketing Support: Platform positioning & communication</div>
+                                <div class="editable-content" contenteditable="true">- Business Strategy: Market expansion planning</div>
+                            </div>
+                        </div>
+
+                        <!-- Buyer / Supplier -->
+                        <div class="cell resource-audience-header audience-2-header">
+                            <div class="editable-content" contenteditable="true">Buyer / Supplier</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Supply Chain Partnership</div></div>
+                        </div>
+                        
+                        <!-- Phase 1 -->
+                        <div class="resource-cell resource-audience-2">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🤝 Value Definition + 📈 Service Design</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ UI/UX Design:</span> <span class="editable-content" contenteditable="true">Dashboard design</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Industry Experts:</span> <span class="editable-content" contenteditable="true">Buyer & supplier insights</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ BI Tools:</span> <span class="editable-content" contenteditable="true">Visualization capabilities</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Business Team: Supplier value communication</div>
+                                <div class="editable-content" contenteditable="true">- Client Success: Pilot relationship management</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 2 -->
+                        <div class="resource-cell resource-audience-2">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🎯 Service Delivery + 💼 Value Validation</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Industry Experts:</span> <span class="editable-content" contenteditable="true">Supply chain consulting</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Business Team + Platform PM:</span> <span class="editable-content" contenteditable="true">Partnership management</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ UI/UX + BI Tools:</span> <span class="editable-content" contenteditable="true">Client dashboard</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Executive Sponsorship: Strategic buyer pilot access</div>
+                                <div class="editable-content" contenteditable="true">- Cross-functional Team: Service delivery execution</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 3 -->
+                        <div class="resource-cell resource-audience-2">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🌟 Ecosystem Building + 🔄 Value Expansion</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Industry Experts:</span> <span class="editable-content" contenteditable="true">Deep supply chain knowledge</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Business Team + Platform PM:</span> <span class="editable-content" contenteditable="true">Partnership development</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Marketing Collaboration: Case study development & promotion</div>
+                                <div class="editable-content" contenteditable="true">- Industry Consultants: Additional expertise as needed</div>
+                            </div>
+                        </div>
+
+                        <!-- Capital Provider -->
+                        <div class="cell resource-audience-header audience-3-header">
+                            <div class="editable-content" contenteditable="true">Capital Provider</div>
+                            <div class="audience-subtitle"><div class="editable-content" contenteditable="true">Funding & Scale</div></div>
+                        </div>
+                        
+                        <!-- Phase 1 -->
+                        <div class="resource-cell resource-audience-3">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">📝 Methodology + ✅ Internal Validation</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ SDU Team:</span> <span class="editable-content" contenteditable="true">Historical data back-testing & analysis</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Risk Team:</span> <span class="editable-content" contenteditable="true">Methodology documentation</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Distribution Team: Investor perspective input</div>
+                                <div class="editable-content" contenteditable="true">- Management: Methodology endorsement</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 2 -->
+                        <div class="resource-cell resource-audience-3">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">📊 Data Proof + 📈 Narrative Building</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ SDU Team:</span> <span class="editable-content" contenteditable="true">Pilot performance reports</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Distribution Team:</span> <span class="editable-content" contenteditable="true">Investor communication & materials</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Platform PM:</span> <span class="editable-content" contenteditable="true">Case study packaging</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Business Team: Pilot results for storytelling</div>
+                                <div class="editable-content" contenteditable="true">- Management: External messaging alignment</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 3 -->
+                        <div class="resource-cell resource-audience-3">
+                            <div class="tagline"><div class="editable-content" contenteditable="true">🏦 Productization + 🔗 Capital Connection</div></div>
+                            <div class="resource-role-list">
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Distribution Team:</span>
+                                </div>
+                                <div class="resource-role-item" style="padding-left: 40px;">
+                                    <span class="editable-content" contenteditable="true">- Investor relationship management</span>
+                                </div>
+                                <div class="resource-role-item" style="padding-left: 40px;">
+                                    <span class="editable-content" contenteditable="true">- Securitization & asset productization</span>
+                                </div>
+                                <div class="resource-role-item" style="padding-left: 40px;">
+                                    <span class="editable-content" contenteditable="true">- Capital markets expertise</span>
+                                </div>
+                                <div class="resource-role-item">
+                                    <span class="required-role">✅ Tech Team:</span> <span class="editable-content" contenteditable="true">Funder Portal development</span>
+                                </div>
+                            </div>
+                            <div class="collaboration-section">
+                                <div class="collaboration-title">🔶 Required Collaboration:</div>
+                                <div class="editable-content" contenteditable="true">- Legal/Compliance: Asset packaging compliance</div>
+                                <div class="editable-content" contenteditable="true">- External Data Procurement: Customs/logistics data access</div>
+                                <div class="editable-content" contenteditable="true">- Marketing Partnership: Institutional-grade investor materials</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-note">
+                        <div class="editable-content" contenteditable="true">✅ = Core team allocation | 🔶 = Required cross-functional collaboration</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <button class="control-btn" onclick="toggleEditMode()">✏️ Edit Mode</button>
+        <button class="control-btn reset" onclick="resetPage()">🔄 Reset</button>
+    </div>
+
+    <script>
+        // 页面状态
+        let isEditMode = true; // 默认打开编辑模式
+        const STORAGE_KEY = 'roadmap_complete_v2';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            enableEditing(isEditMode);
+            loadSavedContent();
+            applyKeywordHighlights();
+            
+            // 添加点击聚焦
+            document.addEventListener('click', function(e) {
+                if (isEditMode && e.target.classList.contains('editable-content')) {
+                    e.target.focus();
+                }
+            });
+        });
+
+        // 显示特定页面
+        function showPage(pageNumber) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 更新导航按钮状态
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            document.getElementById(`page${pageNumber}`).classList.add('active');
+            
+            // 激活对应导航按钮
+            document.querySelector(`.nav-btn:nth-child(${pageNumber})`).classList.add('active');
+        }
+
+        // 切换编辑模式
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            enableEditing(isEditMode);
+            alert('Edit mode ' + (isEditMode ? 'ON' : 'OFF') + '. ' + (isEditMode ? 'Click any text to edit.' : ''));
+        }
+
+        // 启用或禁用编辑功能
+        function enableEditing(enabled) {
+            const allEditable = document.querySelectorAll('.editable-content');
+            allEditable.forEach(el => {
+                el.contentEditable = enabled;
+                el.style.cursor = enabled ? 'text' : 'default';
+                if (!enabled) {
+                    el.style.backgroundColor = '';
+                    el.style.boxShadow = '';
+                }
+                // 监听输入以自动保存
+                el.addEventListener('input', function() {
+                    debounce(saveContent, 500)();
+                    // 保存后重新应用高亮
+                    setTimeout(applyKeywordHighlights, 100);
+                });
+            });
+        }
+
+        // 应用关键字高亮
+        function applyKeywordHighlights() {
+            // 定义关键字列表
+            const keywordLists = {
+                'audience-1-content': [
+                    'Pre-screen → Prioritize → Final Decision',
+                    'Pre-shipment Financing pilot',
+                    'E-commerce/Quick Commerce sub-scorecard',
+                    'E-commerce/Quick Commerce industry pilots',
+                    'Import Financing MVP',
+                    'Process Automation',
+                    'Introduce Post-disbursement Monitoring',
+                    'Fully Automated Decision Engine',
+                    'Dynamic Risk-Based Pricing',
+                    'Intelligent Post-disbursement Monitoring',
+                    'Configurable Risk Engine'
+                ],
+                'audience-2-content': [
+                    'Data-for-Financing Value',
+                    'Industry Insights',
+                    'Service Prototype',
+                    '"Supplier Health Dashboard"',
+                    'Alternative Sourcing',
+                    'Priority Financing Access',
+                    'Supply Chain Resilience Consulting',
+                    'Supplier Development Recommendations',
+                    'Co-designed Buyer-Supplier Financing Programs'
+                ],
+                'audience-3-content': [
+                    'Risk Assessment Methodology',
+                    'Internal Back-testing',
+                    'Performance Tracking',
+                    'Model Validation Report',
+                    'Portfolio Insights',
+                    'Asset Quality Narrative',
+                    'Transparent Asset Pools',
+                    'Funder Portal',
+                    'Lower-Cost Institutional Capital'
+                ]
+            };
+
+            // 对每个内容区域应用高亮
+            Object.keys(keywordLists).forEach(contentClass => {
+                const elements = document.querySelectorAll(`.${contentClass} .editable-content`);
+                elements.forEach(el => {
+                    let html = el.innerHTML;
+                    keywordLists[contentClass].forEach(keyword => {
+                        // 创建正则表达式，匹配整个关键字
+                        const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                        html = html.replace(regex, '<span class="keyword">$1</span>');
+                    });
+                    el.innerHTML = html;
+                });
+            });
+        }
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 保存所有内容到本地存储
+        function saveContent() {
+            const contentMap = {};
+            document.querySelectorAll('.editable-content').forEach((el, index) => {
+                contentMap[`content_${index}`] = el.innerHTML;
+            });
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(contentMap));
+                console.log('Content saved.');
+            } catch (e) {
+                console.warn('Local storage not available (private mode).');
+            }
+        }
+
+        // 从本地存储加载内容
+        function loadSavedContent() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const contentMap = JSON.parse(saved);
+                    document.querySelectorAll('.editable-content').forEach((el, index) => {
+                        if (contentMap[`content_${index}`]) {
+                            el.innerHTML = contentMap[`content_${index}`];
+                        }
+                    });
+                    console.log('Loaded saved content.');
+                }
+            } catch (e) {
+                console.log('No saved content found.');
+            }
+        }
+
+        // 重置页面到原始状态
+        function resetPage() {
+            if (confirm('Reset all content? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
