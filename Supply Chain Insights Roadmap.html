@@ -865,13 +865,13 @@
     <script>
         // 页面状态
         let isEditMode = true; // 默认打开编辑模式
-        const STORAGE_KEY = 'roadmap_complete_v2';
+        const STORAGE_KEY = 'roadmap_complete_v3';
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            enableEditing(isEditMode);
             loadSavedContent();
-            applyKeywordHighlights();
+            applyKeywordHighlights(); // 只在初始化时应用一次高亮
+            enableEditing(isEditMode);
             
             // 添加点击聚焦
             document.addEventListener('click', function(e) {
@@ -920,8 +920,6 @@
                 // 监听输入以自动保存
                 el.addEventListener('input', function() {
                     debounce(saveContent, 500)();
-                    // 保存后重新应用高亮
-                    setTimeout(applyKeywordHighlights, 100);
                 });
             });
         }
@@ -937,7 +935,7 @@
                     'E-commerce/Quick Commerce industry pilots',
                     'Import Financing MVP',
                     'Process Automation',
-                    'Introduce Post-disbursement Monitoring',
+                    'Post-disbursement Monitoring',
                     'Fully Automated Decision Engine',
                     'Dynamic Risk-Based Pricing',
                     'Intelligent Post-disbursement Monitoring',
@@ -947,12 +945,12 @@
                     'Data-for-Financing Value',
                     'Industry Insights',
                     'Service Prototype',
-                    '"Supplier Health Dashboard"',
+                    'Supplier Health Dashboard',
                     'Alternative Sourcing',
                     'Priority Financing Access',
                     'Supply Chain Resilience Consulting',
                     'Supplier Development Recommendations',
-                    'Co-designed Buyer-Supplier Financing Programs'
+                    'Buyer-Supplier Financing Programs'
                 ],
                 'audience-3-content': [
                     'Risk Assessment Methodology',
@@ -971,13 +969,27 @@
             Object.keys(keywordLists).forEach(contentClass => {
                 const elements = document.querySelectorAll(`.${contentClass} .editable-content`);
                 elements.forEach(el => {
-                    let html = el.innerHTML;
-                    keywordLists[contentClass].forEach(keyword => {
-                        // 创建正则表达式，匹配整个关键字
-                        const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                        html = html.replace(regex, '<span class="keyword">$1</span>');
-                    });
-                    el.innerHTML = html;
+                    let originalHTML = el.innerHTML;
+                    let html = originalHTML;
+                    
+                    // 保存原始内容到data属性，避免重复高亮
+                    if (!el.dataset.originalHtml) {
+                        el.dataset.originalHtml = originalHTML;
+                    }
+                    
+                    // 如果元素没有被用户修改过，才应用高亮
+                    if (!el.dataset.userModified) {
+                        keywordLists[contentClass].forEach(keyword => {
+                            // 创建正则表达式，匹配整个关键字
+                            const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                            html = html.replace(regex, '<strong>$1</strong>');
+                        });
+                        
+                        // 如果应用了高亮，更新HTML
+                        if (html !== originalHTML) {
+                            el.innerHTML = html;
+                        }
+                    }
                 });
             });
         }
@@ -999,6 +1011,10 @@
         function saveContent() {
             const contentMap = {};
             document.querySelectorAll('.editable-content').forEach((el, index) => {
+                // 标记用户修改过的元素
+                if (el.innerHTML !== el.dataset.originalHtml) {
+                    el.dataset.userModified = 'true';
+                }
                 contentMap[`content_${index}`] = el.innerHTML;
             });
             try {
@@ -1018,6 +1034,7 @@
                     document.querySelectorAll('.editable-content').forEach((el, index) => {
                         if (contentMap[`content_${index}`]) {
                             el.innerHTML = contentMap[`content_${index}`];
+                            el.dataset.userModified = 'true'; // 标记为用户修改过的内容
                         }
                     });
                     console.log('Loaded saved content.');
